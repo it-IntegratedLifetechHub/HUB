@@ -209,10 +209,6 @@ html {
     gap: 16px;
 }
 
-.test-items svg {
-    color: #9000ff;
-}
-
 .test-item {
     background-color: #fafafa;
     border-radius: 12px;
@@ -275,6 +271,12 @@ html {
     box-shadow: 0 10px 25px rgba(153, 0, 255, 0.1);
     border-color: #9900ff;
 }
+
+
+.test-category-item svg {
+    color: #9000ff;
+}
+
 
 .test-category-item .category-title {
     font-size: 16px;
