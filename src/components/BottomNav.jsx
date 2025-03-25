@@ -4,7 +4,7 @@ import { FaHome, FaBox, FaUser } from "react-icons/fa";
 const BottomNavigation = () => {
   return (
     <div className="bottom-navigation">
-      <a href="/home" className="active">
+      <a href="/patient" className="active">
         <FaHome size={22} />
         <span>Home</span>
       </a>

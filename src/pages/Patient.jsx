@@ -8,8 +8,9 @@ import * as MdIcons from "react-icons/md";
 import * as RiIcons from "react-icons/ri";
 import * as FiIcons from "react-icons/fi";
 import * as AiIcons from "react-icons/ai";
-import testData from "../../public/test.json";
+import testData from "../test.json";
 import BottomNavigation from "../components/BottomNav";
+import { Link } from "react-router-dom";
 
 const iconLibraries = {
   Bi: BiIcons,
@@ -136,10 +137,12 @@ const TestCategories = () => {
 
         <div className="test-categories">
           {filteredCategories.map(([category, details]) => (
-            <div key={category} className="test-category-item">
-              {renderIcon(details.icon)}
-              <div className="category-title">{category}</div>
-            </div>
+            <Link key={category} to={details.link}>
+              <div className="test-category-item">
+                {renderIcon(details.icon)}
+                <div className="category-title">{category}</div>
+              </div>
+            </Link>
           ))}
         </div>
       </div>

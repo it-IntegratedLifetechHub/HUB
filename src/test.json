@@ -1,0 +1,206 @@
+{
+  "tests": {
+    "Basic Health Checkups": {
+      "icon": "MdHealthAndSafety",
+      "link": "/service/Basic%20Health%20Checkups",
+      "tests": [
+        {
+          "name": "Complete Blood Count (CBC)",
+          "icon": "BiDroplet"
+        },
+        {
+          "name": "Blood Sugar Test (Fasting & Random)",
+          "icon": "FaTint"
+        },
+        {
+          "name": "Lipid Profile",
+          "icon": "GiOilDrum"
+        },
+        {
+          "name": "Liver Function Test (LFT)",
+          "icon": "FaProcedures"
+        },
+        {
+          "name": "Kidney Function Test (KFT)",
+          "icon": "GiKidneys"
+        },
+        {
+          "name": "Thyroid Profile (T3, T4, TSH)",
+          "icon": "GiNecklace"
+        },
+        {
+          "name": "Vitamin D & Vitamin B12 Test",
+          "icon": "BiCapsule"
+        }
+      ]
+    },
+    "Infectious Disease Tests": {
+      "icon": "FaVirus",
+      "link": "/service/Infectious%20Disease%20Tests",
+      "tests": [
+        {
+          "name": "COVID-19 RT-PCR or Rapid Test",
+          "icon": "FaVirus"
+        },
+        {
+          "name": "Malaria Test",
+          "icon": "FaMosquito"
+        },
+        {
+          "name": "Dengue Test (NS1, IgG, IgM)",
+          "icon": "FaMosquito"
+        },
+        {
+          "name": "Typhoid Test (Widal, Typhidot)",
+          "icon": "RiVirusLine"
+        },
+        {
+          "name": "HIV Test",
+          "icon": "RiVirusLine"
+        },
+        {
+          "name": "Hepatitis B & C Screening",
+          "icon": "FaVial"
+        }
+      ]
+    },
+    "Chronic Disease Management": {
+      "icon": "MdOutlineMonitorHeart",
+      "link": "/service/Chronic%20Disease%20Management",
+      "tests": [
+        {
+          "name": "HbA1c (3-month average blood sugar)",
+          "icon": "BiDroplet"
+        },
+        {
+          "name": "Creatinine Test",
+          "icon": "GiKidneys"
+        },
+        {
+          "name": "Uric Acid Test",
+          "icon": "GiChemicalDrop"
+        },
+        {
+          "name": "Cholesterol Levels",
+          "icon": "GiOilDrum"
+        },
+        {
+          "name": "Electrolyte Panel (Sodium, Potassium, Chloride)",
+          "icon": "BiPlug"
+        }
+      ]
+    },
+    "Women’s Health Tests": {
+      "icon": "BiFemaleSign",
+      "link": "/service/Women%E2%80%99s%20Health%20Tests",
+      "tests": [
+        {
+          "name": "Pregnancy Test (Beta hCG)",
+          "icon": "BiFemaleSign"
+        },
+        {
+          "name": "PCOS Panel (Hormonal profile)",
+          "icon": "BiFemaleSign"
+        },
+        {
+          "name": "PAP Smear (if offering nurse visits)",
+          "icon": "MdOutlineMedicalServices"
+        },
+        {
+          "name": "CA-125 (Ovarian cancer marker)",
+          "icon": "MdOutlineScience"
+        }
+      ]
+    },
+    "Men’s Health Tests": {
+      "icon": "BiMaleSign",
+      "link": "/service/Men%E2%80%99s%20Health%20Tests",
+      "tests": [
+        {
+          "name": "PSA Test (Prostate-Specific Antigen)",
+          "icon": "BiMaleSign"
+        },
+        {
+          "name": "Testosterone levels",
+          "icon": "BiMaleSign"
+        }
+      ]
+    },
+    "Allergy & Immunity Tests": {
+      "icon": "RiVirusLine",
+      "link": "/service/Allergy%20%26%20Immunity%20Tests",
+      "tests": [
+        {
+          "name": "Allergy Profile (Food & Environmental)",
+          "icon": "GiMedicines"
+        },
+        {
+          "name": "Immunoglobulin Tests (IgE)",
+          "icon": "FiTestTube"
+        }
+      ]
+    },
+    "Cardiac Health": {
+      "icon": "AiOutlineHeart",
+      "link": "/service/Cardiac%20Health",
+      "tests": [
+        {
+          "name": "Cardiac Enzyme Test",
+          "icon": "AiOutlineHeart"
+        },
+        {
+          "name": "Troponin-I",
+          "icon": "AiOutlineHeart"
+        },
+        {
+          "name": "BNP (for heart failure screening)",
+          "icon": "AiOutlineHeart"
+        }
+      ]
+    },
+    "Other Specialized Tests": {
+      "icon": "GiTestTubes",
+      "link": "/service/Other%20Specialized%20Tests",
+      "tests": [
+        {
+          "name": "Stool Routine & Culture",
+          "icon": "GiChemicalDrop"
+        },
+        {
+          "name": "Urine Routine & Culture",
+          "icon": "BiDroplet"
+        },
+        {
+          "name": "Sputum Test",
+          "icon": "BiMask"
+        },
+        {
+          "name": "Coagulation Profile (PT, INR)",
+          "icon": "BiDroplet"
+        },
+        {
+          "name": "Blood Grouping",
+          "icon": "BiDroplet"
+        }
+      ]
+    },
+    "Add-On Services": {
+      "icon": "MdAddCircleOutline",
+      "link": "/service/Add-On%20Services",
+      "tests": [
+        {
+          "name": "ECG at home",
+          "icon": "MdFavorite"
+        },
+        {
+          "name": "Blood Pressure and Oxygen monitoring",
+          "icon": "FiActivity"
+        },
+        {
+          "name": "Portable ultrasound (collaborate with technicians)",
+          "icon": "MdCameraAlt"
+        }
+      ]
+    }
+  }
+}
