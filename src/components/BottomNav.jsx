@@ -1,5 +1,6 @@
 import React from "react";
 import { FaHome, FaBox, FaUser } from "react-icons/fa";
+import { TbReportMedical } from "react-icons/tb";
 
 const BottomNavigation = () => {
   return (
@@ -11,6 +12,10 @@ const BottomNavigation = () => {
       <a href="/orders">
         <FaBox size={22} />
         <span>Orders</span>
+      </a>
+      <a href="/report">
+        <TbReportMedical size={22} />
+        <span>Report</span>
       </a>
       <a href="/profile">
         <FaUser size={22} />

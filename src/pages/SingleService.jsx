@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import * as BiIcons from "react-icons/bi";
 import * as FaIcons from "react-icons/fa";
-import * as Fa6Icons from "react-icons/fa6"; // Make sure this is imported!
 import * as GiIcons from "react-icons/gi";
+import * as PiIcons from "react-icons/pi";
 import * as MdIcons from "react-icons/md";
 import * as RiIcons from "react-icons/ri";
 import * as FiIcons from "react-icons/fi";
@@ -15,21 +15,24 @@ import BottomNavigation from "../components/BottomNav";
 const iconLibraries = {
   Bi: BiIcons,
   Fa: FaIcons,
-  Fa6: Fa6Icons,
   Gi: GiIcons,
+  Pi: PiIcons,
   Md: MdIcons,
   Ri: RiIcons,
   Fi: FiIcons,
   Ai: AiIcons,
 };
+
 const SingleService = () => {
   const { serviceName } = useParams();
   const decodedServiceName = decodeURIComponent(serviceName);
-
-  // ✅ FIX: Access nested under "tests"
   const service = testData.tests[decodedServiceName];
 
-  const renderIcon = (iconName, size = 30, color = "#9900ff") => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const renderIcon = (iconName, size = 40, color = "#7b2cbf") => {
     const prefix = iconName.slice(0, 2);
     const IconComponent = iconLibraries[prefix]?.[iconName];
     return IconComponent ? <IconComponent size={size} color={color} /> : null;
@@ -37,7 +40,7 @@ const SingleService = () => {
 
   if (!service) {
     return (
-      <div style={{ textAlign: "center", padding: "50px", fontSize: "18px" }}>
+      <div className="not-found-message">
         ❗ Service not found. Please go back and select a valid service.
       </div>
     );
@@ -46,17 +49,32 @@ const SingleService = () => {
   return (
     <div className="single-service-container">
       <div className="header-section">
-        {renderIcon(service.icon, 40)}
+        {renderIcon(service.icon, 60)}
         <h1>{decodedServiceName}</h1>
+        <p className="header-subtext">
+          Explore recommended tests and details below
+        </p>
       </div>
-      <div className="tests-list">
-        {service.tests.map((test, index) => (
-          <div key={index} className="test-item">
-            {renderIcon(test.icon, 28)}
-            <span className="test-name">{test.name}</span>
-          </div>
-        ))}
+
+      <div className="single-service-tests-list">
+        {service.tests.map((testGroup, index) =>
+          Object.keys(testGroup).map((testName, idx) => {
+            const testDetails = testGroup[testName];
+            return (
+              <div key={`${index}-${idx}`} className="single-service-test-item">
+                <div className="single-service-test-item-header">
+                  {renderIcon(testDetails.icon, 55)}
+                  <h2>{testName}</h2>
+                </div>
+                <p>
+                  <strong>Description:</strong> {testDetails.description}
+                </p>
+              </div>
+            );
+          })
+        )}
       </div>
+
       <BottomNavigation />
     </div>
   );

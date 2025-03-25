@@ -24,6 +24,7 @@ const iconLibraries = {
 
 const TestCategories = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [location, setLocation] = useState("Fetching location...");
 
   const renderIcon = (iconName) => {
     const prefix = iconName.slice(0, 2);
@@ -35,21 +36,18 @@ const TestCategories = () => {
 
   const filteredTests = Object.entries(testData.tests).flatMap(
     ([category, details]) =>
-      details.tests
-        .filter((test) =>
-          test.name.toLowerCase().includes(searchTerm.toLowerCase())
+      details.tests.flatMap((testGroup) =>
+        Object.entries(testGroup).flatMap(([testName, testInfo]) =>
+          testName.toLowerCase().includes(searchTerm.toLowerCase())
+            ? [{ name: testName, ...testInfo, category }]
+            : []
         )
-        .map((test) => ({
-          ...test,
-          category,
-        }))
+      )
   );
 
   const filteredCategories = Object.entries(testData.tests).filter(
     ([category]) => category.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const [location, setLocation] = useState("Fetching location...");
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -57,7 +55,6 @@ const TestCategories = () => {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            // Fetching location name using OpenStreetMap’s Nominatim API
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
             );
@@ -83,14 +80,14 @@ const TestCategories = () => {
 
   return (
     <>
-      <div className="header-container responsive-container gradient-background">
+      <div className="header-container gradient-background">
         <div className="location-section">
           <div className="location-info">
             <FaLocationDot className="location-icon" />
             <h1 className="location-text">{location}</h1>
           </div>
 
-          <div className="search-bar responsive-search shadow-effect">
+          <div className="search-bar shadow-effect">
             <CiSearch className="search-icon" />
             <input
               type="search"
@@ -104,7 +101,7 @@ const TestCategories = () => {
           {searchTerm && (
             <div className="test-list">
               {filteredTests.length > 0 ? (
-                <div className="test-category smooth-card">
+                <div className="test-category">
                   <h2 className="category-title highlight-text">
                     Search Results
                   </h2>
@@ -112,9 +109,9 @@ const TestCategories = () => {
                     {filteredTests.map((test) => (
                       <li
                         key={`${test.category}-${test.name}`}
-                        className="test-item test-hover clickable-item"
+                        className="test-item clickable"
                       >
-                        {renderIcon(test.icon)} {test.name}{" "}
+                        {renderIcon(test.icon, 40)} {test.name}
                         <span className="category-badge">
                           ({test.category})
                         </span>
@@ -123,27 +120,26 @@ const TestCategories = () => {
                   </ul>
                 </div>
               ) : (
-                <p className="no-results fade-in-text">
+                <p className="no-results">
                   No tests found matching your search.
                 </p>
               )}
             </div>
           )}
         </div>
-      </div>
 
-      <div className="test-categories-container">
-        <h1>Book A Test for Your Health Problem</h1>
-
-        <div className="test-categories">
-          {filteredCategories.map(([category, details]) => (
-            <Link key={category} to={details.link}>
-              <div className="test-category-item">
-                {renderIcon(details.icon)}
-                <div className="category-title">{category}</div>
-              </div>
-            </Link>
-          ))}
+        <div className="test-categories-container">
+          <h1>Book A Test for Your Health Problem</h1>
+          <div className="test-categories">
+            {filteredCategories.map(([category, details]) => (
+              <Link key={category} to={details.link}>
+                <div className="test-category-item">
+                  {renderIcon(details.icon, 50)}
+                  <div className="category-title">{category}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
