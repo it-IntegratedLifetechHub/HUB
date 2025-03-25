@@ -209,6 +209,10 @@ html {
     gap: 16px;
 }
 
+.test-items svg {
+    color: #9900ff;
+}
+
 .test-item {
     background-color: #fafafa;
     border-radius: 12px;
@@ -348,6 +352,7 @@ html {
 }
 
 .single-service-test-item {
+    display: flex;
     background: #fff;
     border: 1px solid #e0d9f2;
     padding: 25px;
@@ -359,6 +364,8 @@ html {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .single-service-test-item::before {
@@ -426,5 +433,220 @@ html {
 
     .single-service-test-item p {
         font-size: 14px;
+    }
+}
+
+
+
+.single-service-cta {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+    justify-content: center;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.cta-link {
+    text-decoration: none;
+    flex: 1 1 45%;
+    /* allows the buttons to shrink and grow while keeping them side by side on larger screens */
+    max-width: 200px;
+}
+
+.cta-button {
+    width: 100%;
+    /* ensures the button fills its container */
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.25s ease-in-out;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.cta-button.know-more {
+    background-color: #ffffff;
+    color: #9900ff;
+    border: 2px solid #9900ff;
+}
+
+.cta-button.know-more:hover {
+    background-color: #f5ebff;
+    color: #7b00cc;
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 8px 20px rgba(123, 0, 204, 0.15);
+}
+
+.cta-button.book-btn {
+    background: linear-gradient(135deg, #9900ff, #7b00cc);
+    color: #ffffff;
+    border: 2px solid transparent;
+}
+
+.cta-button.book-btn:hover {
+    background: linear-gradient(135deg, #7b00cc, #9900ff);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 8px 20px rgba(153, 0, 255, 0.2);
+}
+
+@media (max-width: 480px) {
+    .single-service-cta {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .cta-link {
+        flex: none;
+        width: 80%;
+        max-width: none;
+    }
+}
+
+.single-test-page-container {
+    padding: 50px 30px;
+    max-width: 950px;
+    margin: 50px auto;
+    background: linear-gradient(135deg, #f7f0ff, #ffffff);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.test-header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeInDown 0.8s ease;
+}
+
+.test-header h1 {
+    font-size: 36px;
+    margin-top: 16px;
+    color: #5e0d97;
+    font-weight: 700;
+}
+
+.test-details-card {
+    background: #ffffff;
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 40px;
+    transition: transform 0.3s;
+}
+
+.test-details-card:hover {
+    transform: translateY(-5px);
+}
+
+.test-details-card p {
+    margin-bottom: 20px;
+    line-height: 1.7;
+    color: #333;
+    font-size: 17px;
+}
+
+.test-details-card p strong {
+    color: #000;
+}
+
+.single-service-cta {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.cta-button {
+    padding: 14px 28px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    min-width: 160px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.cta-button.consult-btn {
+    background-color: #ffffff;
+    color: #9900ff;
+    border: 2px solid #9900ff;
+}
+
+.cta-button.consult-btn:hover {
+    background-color: #f4ebff;
+    color: #7b00cc;
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 24px rgba(123, 0, 204, 0.15);
+}
+
+.cta-button.book-now {
+    background: linear-gradient(135deg, #9900ff, #7b00cc);
+    color: #ffffff;
+    border: 2px solid transparent;
+}
+
+.cta-button.book-now:hover {
+    background: linear-gradient(135deg, #7b00cc, #9900ff);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 26px rgba(153, 0, 255, 0.2);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .single-test-page-container {
+        padding: 30px 20px;
+        margin: 30px auto;
+    }
+
+    .test-header h1 {
+        font-size: 28px;
+    }
+
+    .test-details-card {
+        padding: 25px;
+    }
+
+    .cta-button {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .single-service-cta {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .test-header h1 {
+        font-size: 24px;
+    }
+
+    .test-details-card p {
+        font-size: 15px;
+    }
+
+    .cta-button {
+        font-size: 15px;
+        padding: 12px 20px;
     }
 }

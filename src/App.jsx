@@ -6,6 +6,7 @@ import Hub from "./pages/Hub";
 import Lab from "./pages/Lab";
 import Compounder from "./pages/Compounder";
 import SingleService from "./pages/SingleService";
+import SingleTest from "./pages/SingleTest";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/lab" element={<Lab />} />
         <Route path="/compounder" element={<Compounder />} />
         <Route path="/service/:serviceName" element={<SingleService />} />
+        <Route path="/service/:serviceName/:test" element={<SingleTest />} />
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
     </BrowserRouter>

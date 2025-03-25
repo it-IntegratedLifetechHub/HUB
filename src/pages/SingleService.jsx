@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import * as BiIcons from "react-icons/bi";
 import * as FaIcons from "react-icons/fa";
 import * as GiIcons from "react-icons/gi";
@@ -69,6 +69,17 @@ const SingleService = () => {
                 <p>
                   <strong>Description:</strong> {testDetails.description}
                 </p>
+                <div className="single-service-cta">
+                  <Link
+                    to={`/service/${encodeURIComponent(
+                      decodedServiceName
+                    )}/${encodeURIComponent(testName)}`}
+                    className="cta-link"
+                  >
+                    <button className="cta-button know-more">Know More</button>
+                  </Link>
+                  <button className="cta-button book-btn">Book Now</button>
+                </div>
               </div>
             );
           })
