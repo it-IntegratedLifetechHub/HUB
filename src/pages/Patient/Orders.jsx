@@ -4,10 +4,7 @@ import {
   FaFlask,
   FaFileAlt,
   FaCalendarAlt,
-  FaInfoCircle,
-  FaUserNurse,
   FaClock,
-  FaMapMarkerAlt,
 } from "react-icons/fa";
 import BottomNavigation from "../../components/BottomNav";
 
