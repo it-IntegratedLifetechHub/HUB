@@ -130,8 +130,6 @@ html {
 
 
 
-/* Bottom Navigation */
-
 .bottom-navigation {
     position: fixed;
     bottom: 0;
@@ -153,19 +151,27 @@ html {
     align-items: center;
     font-size: 12px;
     color: #555;
-    transition: color 0.3s;
+    transition: all 0.3s ease;
+    text-decoration: none;
 }
 
-.bottom-navigation a:hover,
 .bottom-navigation a.active {
+    color: #9900ff;
+    transform: scale(1.05);
+}
+
+.bottom-navigation a:hover {
     color: #9900ff;
 }
 
-.bottom-navigation i {
-    font-size: 22px;
+.bottom-navigation a svg {
     margin-bottom: 4px;
+    transition: transform 0.3s ease;
 }
 
+.bottom-navigation a.active svg {
+    transform: scale(1.1);
+}
 
 
 
@@ -707,5 +713,297 @@ html {
     .cta-button {
         font-size: 15px;
         padding: 12px 20px;
+    }
+}
+
+.orders-container {
+    max-width: 800px;
+    margin: 20px auto 100px auto;
+    padding: 20px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #5e0d97;
+    text-align: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #f9f9ff;
+    border-radius: 16px;
+    margin-top: 30px;
+}
+
+.empty-state h3 {
+    font-size: 22px;
+    color: #333;
+    margin: 20px 0 10px;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.empty-image {
+    width: 150px;
+    height: auto;
+    opacity: 0.8;
+}
+
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.order-card {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-left: 4px solid #9900ff;
+}
+
+.order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.test-name {
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-badge.completed {
+    background-color: #e6f7ee;
+    color: #2c7a4f;
+}
+
+.status-badge.in-lab {
+    background-color: #f0e6ff;
+    color: #9900ff;
+}
+
+.status-badge.pending {
+    background-color: #fff4e6;
+    color: #e67e22;
+}
+
+.order-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.detail-icon {
+    color: #9900ff;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.detail-label {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 4px 0;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin: 0;
+}
+
+.notes-section {
+    background-color: #f8f5ff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.notes-label {
+    font-weight: 600;
+    color: #5e0d97;
+    margin: 0 0 8px 0;
+    font-size: 15px;
+}
+
+.notes-text {
+    color: #555;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.order-status-section {
+    margin-top: 25px;
+}
+
+.order-status-section h3 {
+    font-size: 18px;
+    color: #444;
+    margin-bottom: 15px;
+}
+
+.progress-tracker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px 0;
+    position: relative;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+    color: #bbb;
+    font-size: 14px;
+    z-index: 1;
+}
+
+.step svg {
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    color: #9900ff;
+    font-weight: 600;
+}
+
+.step.active .active-icon {
+    color: #9900ff;
+    transform: scale(1.2);
+}
+
+.line {
+    height: 3px;
+    flex: 1;
+    background-color: #eee;
+    border-radius: 3px;
+    transition: background-color 0.3s;
+}
+
+.line.active-line {
+    background: linear-gradient(90deg, #9900ff, #c97bff);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.action-buttons button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.download-button {
+    background-color: #9900ff;
+    color: white;
+}
+
+.download-button:hover {
+    background-color: #7a00cc;
+}
+
+.contact-button {
+    background-color: #f0e6ff;
+    color: #9900ff;
+}
+
+.contact-button:hover {
+    background-color: #e0ccff;
+}
+
+.details-button {
+    background-color: white;
+    color: #9900ff;
+    border: 1px solid #9900ff !important;
+}
+
+.details-button:hover {
+    background-color: #f9f5ff;
+}
+
+@media (max-width: 768px) {
+    .order-details {
+        grid-template-columns: 1fr;
+    }
+
+    .progress-tracker {
+        justify-content: center;
+    }
+
+    .line {
+        display: none;
+    }
+
+    .step {
+        margin: 0 10px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-card {
+        padding: 18px;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    .test-name {
+        font-size: 20px;
+    }
+
+    .detail-item {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .detail-icon {
+        margin-top: 0;
     }
 }

@@ -1,9 +1,11 @@
-import React from 'react'
-
+import React from "react";
+import BottomNavigation from "../../components/BottomNav";
 const Report = () => {
   return (
-    <div>Report</div>
-  )
-}
+    <>
+      <BottomNavigation />
+    </>
+  );
+};
 
-export default Report
+export default Report;

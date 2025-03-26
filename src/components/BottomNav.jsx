@@ -1,26 +1,36 @@
 import React from "react";
 import { FaHome, FaBox, FaUser } from "react-icons/fa";
 import { TbReportMedical } from "react-icons/tb";
+import { useLocation, Link } from "react-router-dom";
 
 const BottomNavigation = () => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
   return (
     <div className="bottom-navigation">
-      <a href="/patient" className="active">
+      <Link
+        to="/patient"
+        className={currentPath === "/patient" ? "active" : ""}
+      >
         <FaHome size={22} />
         <span>Home</span>
-      </a>
-      <a href="/orders">
+      </Link>
+      <Link to="/orders" className={currentPath === "/orders" ? "active" : ""}>
         <FaBox size={22} />
         <span>Orders</span>
-      </a>
-      <a href="/report">
+      </Link>
+      <Link to="/report" className={currentPath === "/report" ? "active" : ""}>
         <TbReportMedical size={22} />
         <span>Report</span>
-      </a>
-      <a href="/profile">
+      </Link>
+      <Link
+        to="/profile"
+        className={currentPath === "/profile" ? "active" : ""}
+      >
         <FaUser size={22} />
         <span>Profile</span>
-      </a>
+      </Link>
     </div>
   );
 };

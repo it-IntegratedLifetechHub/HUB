@@ -1,7 +1,12 @@
 import React from "react";
+import BottomNavigation from "../../components/BottomNav";
 
 const Profile = () => {
-  return <div>Profile</div>;
+  return (
+    <>
+      <BottomNavigation />
+    </>
+  );
 };
 
 export default Profile;
