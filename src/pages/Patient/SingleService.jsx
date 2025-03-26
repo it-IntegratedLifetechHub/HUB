@@ -9,8 +9,8 @@ import * as RiIcons from "react-icons/ri";
 import * as FiIcons from "react-icons/fi";
 import * as AiIcons from "react-icons/ai";
 
-import testData from "../test.json";
-import BottomNavigation from "../components/BottomNav";
+import testData from "../../test.json";
+import BottomNavigation from "../../components/BottomNav";
 
 const iconLibraries = {
   Bi: BiIcons,

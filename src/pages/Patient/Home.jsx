@@ -8,8 +8,8 @@ import * as MdIcons from "react-icons/md";
 import * as RiIcons from "react-icons/ri";
 import * as FiIcons from "react-icons/fi";
 import * as AiIcons from "react-icons/ai";
-import testData from "../test.json";
-import BottomNavigation from "../components/BottomNav";
+import testData from "../../test.json";
+import BottomNavigation from "../../components/BottomNav";
 import { Link } from "react-router-dom";
 
 const iconLibraries = {
@@ -22,7 +22,7 @@ const iconLibraries = {
   Ai: AiIcons,
 };
 
-const TestCategories = () => {
+const Home = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [location, setLocation] = useState("Fetching location...");
 
@@ -106,17 +106,28 @@ const TestCategories = () => {
                     Search Results
                   </h2>
                   <ul className="test-items">
-                    {filteredTests.map((test) => (
-                      <li
-                        key={`${test.category}-${test.name}`}
-                        className="test-item clickable"
-                      >
-                        {renderIcon(test.icon, 40)} {test.name}
-                        <span className="category-badge">
-                          ({test.category})
-                        </span>
-                      </li>
-                    ))}
+                    {filteredTests.map((test) => {
+                      const encodedTestName = encodeURIComponent(test.name);
+                      const encodedCategory = encodeURIComponent(test.category);
+
+                      return (
+                        <li
+                          key={`${test.category}-${test.name}`}
+                          className="test-item"
+                        >
+                          <Link
+                            to={`/service/${encodedCategory}/${encodedTestName}`}
+                            className="test-link"
+                          >
+                            {renderIcon(test.icon, 40)}
+                            <span className="test-name">{test.name}</span>
+                            <span className="category-badge">
+                              ({test.category})
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ) : (
@@ -148,4 +159,4 @@ const TestCategories = () => {
   );
 };
 
-export default TestCategories;
+export default Home;

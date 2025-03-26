@@ -4,8 +4,8 @@ import { MdHealthAndSafety } from "react-icons/md";
 import { BiDroplet, BiCapsule } from "react-icons/bi";
 import { FaTint, FaProcedures } from "react-icons/fa";
 import { GiOilDrum, GiKidneys, GiNecklace } from "react-icons/gi";
-import testData from "../test.json";
-import BottomNavigation from "../components/BottomNav";
+import testData from "../../test.json";
+import BottomNavigation from "../../components/BottomNav";
 
 const iconMap = {
   MdHealthAndSafety,
