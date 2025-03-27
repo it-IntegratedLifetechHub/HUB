@@ -12,6 +12,7 @@ import Profile from "./pages/Patient/Profile";
 import Hub from "./pages/Hub";
 import Lab from "./pages/Lab";
 import Compounder from "./pages/Compounder";
+import EditProfile from "./components/EditProfile";
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/orders" element={<Orders />} />
         <Route path="/report" element={<Report />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/edit-field" element={<EditProfile />} />
 
         <Route path="/hub" element={<Hub />} />
         <Route path="/lab" element={<Lab />} />
