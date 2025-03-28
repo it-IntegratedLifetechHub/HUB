@@ -40,9 +40,11 @@ const Profile = () => {
   return (
     <>
       <div className="profile-container">
-        {/* Profile Icon */}
-        <div className="profile-icon">
-          <FaUserCircle size={120} color="#5e0d97" />
+        <h1 className="page-title">Profile</h1>
+        <div className="profile-header">
+          <FaUserCircle size={120} className="profile-icon" />
+          <h2 className="profile-name">{profileData.personal.Name}</h2>
+          <p className="profile-email">{profileData.personal["Email ID"]}</p>
         </div>
 
         {/* Toggle Section */}
@@ -60,7 +62,7 @@ const Profile = () => {
           ))}
         </div>
 
-        {/* Profile Details */}
+        {/* Profile Details Section */}
         <div className="profile-details">
           {Object.entries(profileData[activeSection]).map(([key, value]) => (
             <div

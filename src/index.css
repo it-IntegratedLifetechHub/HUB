@@ -1170,39 +1170,60 @@ html {
     }
 }
 
+/* Main Profile Container */
 .profile-container {
     max-width: 800px;
     margin: 30px auto;
     padding: 20px;
-    text-align: center;
-    background: #ffffff;
+    background: white;
     border-radius: 15px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    transition: 0.3s ease-in-out;
+    transition: transform 0.3s ease-in-out;
+}
+
+.profile-container:hover {
+}
+
+/* Profile Header */
+.profile-header {
+    text-align: center;
+    padding: 20px 0;
 }
 
 .profile-icon {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
+    color: #5e0d97;
     transition: transform 0.3s ease-in-out;
 }
 
 .profile-icon:hover {
-    transform: scale(1.05);
+    transform: scale(1.1);
 }
 
+.profile-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0 5px;
+}
+
+.profile-email {
+    font-size: 14px;
+    color: #777;
+}
+
+/* Toggle Section */
 .toggle-container {
     display: flex;
     justify-content: center;
-    gap: 15px;
+    gap: 10px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .toggle-btn {
-    padding: 12px 24px;
+    padding: 12px 20px;
     border: 2px solid #9900ff;
-    border-radius: 25px;
+    border-radius: 20px;
     background: transparent;
     color: #9900ff;
     cursor: pointer;
@@ -1220,11 +1241,12 @@ html {
     transform: scale(1.1);
 }
 
+/* Profile Details */
 .profile-details {
     background: linear-gradient(135deg, #ffffff, #f3f6ff);
     border-radius: 10px;
     padding: 20px;
-    margin: 40px 0;
+    margin: 20px 0;
 }
 
 .profile-row {
@@ -1238,7 +1260,7 @@ html {
 }
 
 .profile-row:hover {
-    background: #e6e6e6;
+    background: rgba(153, 0, 255, 0.1);
     transform: scale(1.02);
 }
 
@@ -1248,10 +1270,11 @@ html {
 }
 
 .profile-value {
-    color: #666;
+    color: #555;
     font-style: italic;
 }
 
+/* Mobile Responsiveness */
 @media (max-width: 480px) {
     .profile-container {
         padding: 15px;
@@ -1266,8 +1289,6 @@ html {
         text-align: left;
     }
 }
-
-
 
 /* Main Container */
 .edit-profile-container {
@@ -1369,7 +1390,6 @@ html {
     background: #c9302c;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 480px) {
     .edit-profile-card {
         width: 100%;
