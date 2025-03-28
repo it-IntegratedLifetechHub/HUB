@@ -11,7 +11,9 @@ import Profile from "./pages/Patient/Profile";
 
 import Hub from "./pages/Hub";
 import Lab from "./pages/Lab";
-import Compounder from "./pages/Compounder";
+import Phlebotomist from "./pages/Phlebotomist/Dashboard";
+import PhlebotomistTask from "./pages/Phlebotomist/Task";
+import PhlebotomistProfile from "./pages/Phlebotomist/Profile";
 import EditProfile from "./components/EditProfile";
 
 const App = () => {
@@ -28,9 +30,12 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-field" element={<EditProfile />} />
 
+        <Route path="/phlebotomist/dashboard" element={<Phlebotomist />} />
+        <Route path="/phlebotomist/task" element={<PhlebotomistTask />} />
+        <Route path="/phlebotomist/profile" element={<PhlebotomistProfile />} />
+
         <Route path="/hub" element={<Hub />} />
         <Route path="/lab" element={<Lab />} />
-        <Route path="/compounder" element={<Compounder />} />
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
     </BrowserRouter>

@@ -1,9 +1,8 @@
-import React from 'react'
+import React from "react";
+import PhlebotomistBottomNavigation from "../../components/PhlebotomistNav";
 
 const Profile = () => {
-  return (
-    <div>Profile</div>
-  )
-}
+  return <PhlebotomistBottomNavigation />;
+};
 
-export default Profile
+export default Profile;
