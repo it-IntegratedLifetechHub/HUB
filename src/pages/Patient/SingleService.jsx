@@ -80,9 +80,6 @@ const SingleService = () => {
   return (
     <div className="service-container">
       <div className="service-header">
-        <Link to="/" className="back-link">
-          <FaArrowLeft /> Back
-        </Link>
         <div className="header-content">
           <div className="service-icon">
             <FaFlask size={50} />
@@ -182,7 +179,7 @@ const SingleService = () => {
           margin: 0 auto;
           padding: 20px;
           padding-bottom: 100px;
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Outfit", sans-serif;
         }
 
         /* Not Found State */

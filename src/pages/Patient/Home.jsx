@@ -222,7 +222,7 @@ const Home = () => {
           max-width: 100%;
           margin: 0 auto;
           padding-bottom: 80px;
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          font-family: "Outfit", sans-serif;
           background: linear-gradient(135deg, #f9f7ff, #ffffff);
         }
 

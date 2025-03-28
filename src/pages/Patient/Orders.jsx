@@ -351,7 +351,7 @@ const Orders = () => {
           margin: 0 auto;
           padding: 20px;
           padding-bottom: 100px;
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Outfit", sans-serif;
         }
 
         .page-title {

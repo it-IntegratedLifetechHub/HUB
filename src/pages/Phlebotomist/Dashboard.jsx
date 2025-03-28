@@ -337,7 +337,7 @@ const Dashboard = () => {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px 16px 100px;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Outfit", sans-serif;
           }
 
           .dashboard-title {

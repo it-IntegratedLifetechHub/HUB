@@ -348,7 +348,7 @@ const Profile = () => {
           max-width: 1000px;
           margin: 0 auto;
           padding: 20px 16px 100px;
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          font-family: "Outfit", sans-serif;
           color: var(--text-dark);
         }
 
@@ -494,7 +494,7 @@ const Profile = () => {
           padding: 10px;
           border: 1px solid #ddd;
           border-radius: 6px;
-          font-family: inherit;
+          font-family: "Outfit", sans-serif;
           font-size: 16px;
         }
 
