@@ -329,6 +329,419 @@ const Dashboard = () => {
       </div>
 
       <PhlebotomistBottomNavigation />
+      <style jsx="true">
+        {`
+          /* General Dashboard Styles */
+          /* Base Styles */
+          .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 16px 100px;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          }
+
+          .dashboard-title {
+            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            text-align: center;
+            font-weight: 700;
+          }
+
+          /* Task Overview Cards */
+          .task-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+          }
+
+          .task-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            border-bottom: 4px solid transparent;
+          }
+
+          .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+          }
+
+          .task-card.total {
+            border-color: var(--primary-color);
+          }
+
+          .task-card.completed {
+            border-color: var(--secondary-color);
+          }
+
+          .task-card.pending {
+            border-color: var(--warning-color);
+          }
+
+          .task-card.urgent {
+            border-color: var(--danger-color);
+          }
+
+          .task-icon {
+            font-size: 55px;
+            color: white;
+            background: var(--primary-color);
+            padding: 12px;
+            border-radius: 50%;
+          }
+
+          .task-card.completed .task-icon {
+            background: var(--secondary-color);
+          }
+
+          .task-card.pending .task-icon {
+            background: var(--warning-color);
+          }
+
+          .task-card.urgent .task-icon {
+            background: var(--danger-color);
+          }
+
+          .task-card-content h2 {
+            font-size: 28px;
+            margin: 0;
+            color: var(--text-dark);
+          }
+
+          .task-card-content p {
+            margin: 4px 0 0;
+            color: var(--text-medium);
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          /* Dashboard Grid Layout */
+          .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+          }
+
+          /* Section Styles */
+          .calendar-section,
+          .task-filters {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+          }
+
+          .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+          }
+
+          .section-header h2 {
+            font-size: 20px;
+            color: var(--text-dark);
+            margin: 0;
+          }
+
+          .section-icon {
+            color: var(--primary-color);
+            font-size: 20px;
+          }
+
+          /* Calendar Styles */
+          .custom-calendar {
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+          }
+
+          .react-calendar__tile--now {
+            background: var(--primary-light);
+          }
+
+          .react-calendar__tile--active {
+            background: var(--primary-color);
+            color: white;
+          }
+
+          /* Calendar Markings */
+          .calendar-task-completed {
+            background: var(--secondary-color) !important;
+            color: white !important;
+            border-radius: 50%;
+          }
+
+          .calendar-task-pending {
+            background: var(--warning-color) !important;
+            color: white !important;
+            border-radius: 50%;
+          }
+
+          /* Filter Buttons */
+          .filter-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+
+          .filter-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #f8f9fa;
+            color: var(--text-medium);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+          }
+
+          .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+          }
+
+          .filter-btn:hover {
+            background: #e9ecef;
+          }
+
+          .filter-btn.active:hover {
+            background: var(--primary-color);
+          }
+
+          /* Appointments Section */
+          .appointments-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+          }
+
+          .appointments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          /* Task Item Styles */
+          .task-item {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid var(--warning-color);
+            transition: var(--transition);
+          }
+
+          .task-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+
+          .task-item.completed {
+            border-left-color: var(--secondary-color);
+            opacity: 0.9;
+          }
+
+          .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+          }
+
+          .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+
+          .patient-info h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--text-dark);
+          }
+
+          .info-icon {
+            color: var(--primary-color);
+          }
+
+          /* Priority Badge */
+          .priority-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+          }
+
+          .priority-badge.high {
+            background: #fee2e2;
+            color: var(--danger-color);
+          }
+
+          .priority-badge.urgent {
+            background: #ffd6d6;
+            color: #c00;
+          }
+
+          .priority-badge.medium {
+            background: #fef3c7;
+            color: #b45309;
+          }
+
+          .priority-badge.low {
+            background: #d1fae5;
+            color: #065f46;
+          }
+
+          /* Status Badge */
+          .status-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          .status-badge.pending {
+            background: #fef3c7;
+            color: #b45309;
+          }
+
+          .status-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+          }
+
+          .status-badge.in-progress {
+            background: #dbeafe;
+            color: #1e40af;
+          }
+
+          /* Task Details */
+          .task-details {
+            margin: 12px 0;
+          }
+
+          .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: var(--text-medium);
+          }
+
+          .detail-icon {
+            color: var(--primary-color);
+            min-width: 20px;
+          }
+
+          .task-notes {
+            margin-top: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+          }
+
+          /* Task Actions */
+          .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+          }
+
+          .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+          }
+
+          .start-btn {
+            background: var(--warning-color);
+            color: white;
+          }
+
+          .start-btn:hover {
+            background: #e68a00;
+          }
+
+          .complete-btn {
+            background: var(--secondary-color);
+            color: white;
+          }
+
+          .complete-btn:hover {
+            background: #218838;
+          }
+
+          .reschedule-btn {
+            background: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+          }
+
+          .reschedule-btn:hover {
+            background: var(--primary-light);
+          }
+
+          .contact-btn {
+            background: white;
+            color: var(--info-color);
+            border: 1px solid var(--info-color);
+          }
+
+          .contact-btn:hover {
+            background: #e6f7ff;
+          }
+
+          /* No Tasks State */
+          .no-tasks {
+            text-align: center;
+            padding: 40px 20px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            color: var(--text-medium);
+          }
+
+          /* Responsive Design */
+          @media (max-width: 992px) {
+            .dashboard-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @media (max-width: 768px) {
+            .task-overview {
+              grid-template-columns: 1fr 1fr;
+            }
+          }
+
+          @media (max-width: 576px) {
+            .task-overview {
+              grid-template-columns: 1fr;
+            }
+
+            .filter-buttons {
+              grid-template-columns: 1fr;
+            }
+
+            .task-actions {
+              flex-direction: column;
+            }
+          }
+        `}
+      </style>
     </>
   );
 };

@@ -326,7 +326,7 @@ const Profile = () => {
 
       <PhlebotomistBottomNavigation />
 
-      <style jsx>{`
+      <style jsx="true">{`
         /* Color Variables */
         :root {
           --primary-color: #5e0d97;

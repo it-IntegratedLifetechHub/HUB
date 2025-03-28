@@ -296,6 +296,426 @@ const Task = () => {
       </div>
 
       <PhlebotomistBottomNavigation />
+
+      <style jsx="true">{`
+        /* Base Styles */
+        .task-list-container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px 16px 80px;
+        }
+
+        .task-list-header {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+
+        .page-title {
+          font-size: 28px;
+          font-weight: 700;
+          color: var(--text-dark);
+          margin: 0;
+        }
+
+        .filter-controls {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          padding-bottom: 8px;
+        }
+
+        .filter-btn {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 20px;
+          background-color: #e5e7eb;
+          color: var(--text-medium);
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: var(--transition);
+        }
+
+        .filter-btn.active {
+          background-color: var(--primary-color);
+          color: white;
+        }
+
+        .filter-btn:hover {
+          background-color: #d1d5db;
+        }
+
+        .filter-btn.active:hover {
+          background-color: var(--primary-hover);
+        }
+
+        /* Task Container */
+        .task-container {
+          background: white;
+          padding: 24px;
+          margin-bottom: 20px;
+          border-radius: var(--border-radius);
+          box-shadow: var(--box-shadow);
+          transition: var(--transition);
+          border-left: 4px solid var(--primary-color);
+        }
+
+        .task-container.pending {
+          border-left-color: var(--warning-color);
+        }
+
+        .task-container.in-progress {
+          border-left-color: var(--primary-color);
+        }
+
+        .task-container.completed {
+          border-left-color: var(--secondary-color);
+        }
+
+        .task-container:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Task Header */
+        .task-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .task-title-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .test-icon {
+          color: var(--primary-color);
+          font-size: 20px;
+        }
+
+        .task-header h2 {
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--text-dark);
+          margin: 0;
+        }
+
+        .status-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
+        .status-badge.pending {
+          background-color: #fef3c7;
+          color: #d97706;
+        }
+
+        .status-badge.in-progress {
+          background-color: var(--primary-light);
+          color: var(--primary-color);
+        }
+
+        .status-badge.completed {
+          background-color: #d1fae5;
+          color: #059669;
+        }
+
+        .status-badge .icon {
+          font-size: 16px;
+        }
+
+        /* Priority Badge */
+        .priority-badge {
+          padding: 4px 10px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .priority-badge.high {
+          background-color: #fee2e2;
+          color: var(--danger-color);
+        }
+
+        .priority-badge.medium {
+          background-color: #fef3c7;
+          color: #d97706;
+        }
+
+        .priority-badge.low {
+          background-color: #d1fae5;
+          color: #059669;
+        }
+
+        /* Patient Info */
+        .patient-info {
+          margin-bottom: 16px;
+        }
+
+        .patient-info h3 {
+          font-size: 16px;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--text-medium);
+        }
+
+        .info-label {
+          font-weight: 600;
+        }
+
+        .patient-name {
+          font-weight: 700;
+          color: var(--text-dark);
+        }
+
+        /* Task Details Grid */
+        .task-details-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+          margin-bottom: 20px;
+        }
+
+        .detail-item {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+        }
+
+        .detail-icon {
+          color: var(--primary-color);
+          font-size: 20px;
+          margin-top: 2px;
+        }
+
+        .detail-label {
+          font-size: 14px;
+          color: var(--text-light);
+          margin: 0 0 4px;
+        }
+
+        .detail-value {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--text-dark);
+          margin: 0 0 6px;
+        }
+
+        .detail-subvalue {
+          font-size: 14px;
+          color: var(--text-medium);
+          margin: 0;
+        }
+
+        .contact-btn,
+        .map-btn {
+          padding: 4px 12px;
+          border-radius: 4px;
+          font-size: 13px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: var(--transition);
+        }
+
+        .contact-btn {
+          background-color: #e0f2fe;
+          color: #0369a1;
+        }
+
+        .contact-btn:hover {
+          background-color: #bae6fd;
+        }
+
+        .map-btn {
+          background-color: #e0e7ff;
+          color: #4338ca;
+        }
+
+        .map-btn:hover {
+          background-color: #c7d2fe;
+        }
+
+        /* Important Notes */
+        .important-notes {
+          background-color: var(--primary-light);
+          padding: 16px;
+          border-radius: var(--border-radius);
+          margin-bottom: 20px;
+        }
+
+        .notes-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          color: var(--primary-color);
+          margin: 0 0 8px;
+        }
+
+        .notes-content {
+          font-size: 15px;
+          color: var(--text-dark);
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        /* Task Actions */
+        .task-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .btn-primary,
+        .btn-secondary,
+        .btn-tertiary {
+          width: 100%;
+          padding: 14px;
+          border: none;
+          font-size: 16px;
+          font-weight: 600;
+          border-radius: var(--border-radius);
+          cursor: pointer;
+          transition: var(--transition);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .btn-primary {
+          background-color: var(--primary-color);
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+          background-color: white;
+          color: var(--primary-color);
+          border: 1px solid var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+          background-color: var(--primary-light);
+        }
+
+        .btn-tertiary {
+          background-color: transparent;
+          color: var(--text-medium);
+          border: 1px solid #e5e7eb;
+        }
+
+        .btn-tertiary:hover {
+          background-color: #f9fafb;
+        }
+
+        .start-btn {
+          background-color: var(--warning-color);
+        }
+
+        .start-btn:hover {
+          background-color: #d97706;
+        }
+
+        .complete-btn {
+          background-color: var(--secondary-color);
+        }
+
+        .complete-btn:hover {
+          background-color: #059669;
+        }
+
+        /* Loading State */
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 200px;
+          gap: 16px;
+        }
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid var(--primary-light);
+          border-top-color: var(--primary-color);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* No Tasks State */
+        .no-tasks {
+          text-align: center;
+          padding: 40px 20px;
+          background-color: #f9fafb;
+          border-radius: var(--border-radius);
+          color: var(--text-medium);
+        }
+
+        /* Responsive Design */
+        @media (min-width: 600px) {
+          .task-details-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .task-actions {
+            flex-direction: row;
+            flex-wrap: wrap;
+          }
+
+          .btn-primary,
+          .btn-secondary,
+          .btn-tertiary {
+            width: auto;
+            flex: 1;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .task-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .status-wrapper {
+            width: 100%;
+            justify-content: space-between;
+          }
+        }
+      `}</style>
     </>
   );
 };

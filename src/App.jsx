@@ -14,7 +14,6 @@ import Lab from "./pages/Lab";
 import Phlebotomist from "./pages/Phlebotomist/Dashboard";
 import PhlebotomistTask from "./pages/Phlebotomist/Task";
 import PhlebotomistProfile from "./pages/Phlebotomist/Profile";
-import EditProfile from "./components/EditProfile";
 
 const App = () => {
   return (
@@ -28,7 +27,6 @@ const App = () => {
         <Route path="/orders" element={<Orders />} />
         <Route path="/report" element={<Report />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/edit-field" element={<EditProfile />} />
 
         <Route path="/phlebotomist/dashboard" element={<Phlebotomist />} />
         <Route path="/phlebotomist/task" element={<PhlebotomistTask />} />
