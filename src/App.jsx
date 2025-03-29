@@ -9,11 +9,14 @@ import Orders from "./pages/Patient/Orders";
 import Report from "./pages/Patient/Report";
 import Profile from "./pages/Patient/Profile";
 
-import Hub from "./pages/Hub";
-import Lab from "./pages/Lab";
 import Phlebotomist from "./pages/Phlebotomist/Dashboard";
 import PhlebotomistTask from "./pages/Phlebotomist/Task";
 import PhlebotomistProfile from "./pages/Phlebotomist/Profile";
+
+import Lab from "./pages/Lab/Dashboard";
+import LabTest from "./pages/Lab/Test";
+import LabReport from "./pages/Lab/Reports";
+import LabProfile from "./pages/Lab/Profile";
 
 const App = () => {
   return (
@@ -32,8 +35,11 @@ const App = () => {
         <Route path="/phlebotomist/task" element={<PhlebotomistTask />} />
         <Route path="/phlebotomist/profile" element={<PhlebotomistProfile />} />
 
-        <Route path="/hub" element={<Hub />} />
-        <Route path="/lab" element={<Lab />} />
+        <Route path="/lab/dashboard" element={<Lab />} />
+        <Route path="/lab/test" element={<LabTest />} />
+        <Route path="/lab/report" element={<LabReport />} />
+        <Route path="/lab/profile" element={<LabProfile />} />
+
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
     </BrowserRouter>

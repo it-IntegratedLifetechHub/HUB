@@ -306,9 +306,6 @@ const Dashboard = () => {
                         >
                           Start Task
                         </button>
-                        <button className="btn reschedule-btn">
-                          Reschedule
-                        </button>
                       </>
                     )}
                     {task.status === "In Progress" && (
@@ -337,7 +334,7 @@ const Dashboard = () => {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px 16px 100px;
-    font-family: "Outfit", sans-serif;
+            font-family: "Outfit", sans-serif;
           }
 
           .dashboard-title {
@@ -683,16 +680,6 @@ const Dashboard = () => {
 
           .complete-btn:hover {
             background: #218838;
-          }
-
-          .reschedule-btn {
-            background: white;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-          }
-
-          .reschedule-btn:hover {
-            background: var(--primary-light);
           }
 
           .contact-btn {
