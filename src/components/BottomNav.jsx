@@ -1,18 +1,17 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { FaHome, FaUser, FaBell, FaPlus, FaHistory } from "react-icons/fa";
 import { MdOutlineInventory, MdLocalHospital } from "react-icons/md";
 import { TbReportMedical, TbReport } from "react-icons/tb";
 import { useLocation, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 const BottomNavigation = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const [hasNotifications, setHasNotifications] = useState(false);
+  const [activeHover, setActiveHover] = useState(null);
 
-  // Sample data - replace with actual notification check
   useEffect(() => {
-    // Simulate checking for notifications
     const timer = setTimeout(() => {
       setHasNotifications(true);
     }, 2000);
@@ -25,33 +24,37 @@ const BottomNavigation = () => {
       icon: <FaHome size={20} />,
       label: "Home",
       exact: true,
+      color: "#5e0d97",
     },
     {
       path: "/orders",
       icon: <FaHistory size={20} />,
       label: "Orders",
+      color: "#17a2b8",
     },
-
     {
       path: "/report",
-      icon: <TbReportMedical size={20} />,
+      icon: <TbReportMedical size={22} />,
       label: "Reports",
+      color: "#28a745",
     },
     {
       path: "/profile",
-      icon: (
-        <div className="notification-wrapper">
-          <FaUser size={20} />
-          {hasNotifications && <span className="notification-badge" />}
-        </div>
-      ),
+      icon: <FaUser size={20} />,
       label: "Profile",
+      color: "#ff8f00",
+      notification: hasNotifications,
     },
   ];
 
   return (
-    <>
-      <div className="bottom-navigation">
+    <div className="nav-container">
+      <motion.nav
+        className="bottom-navigation"
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, type: "spring" }}
+      >
         {navItems.map((item) => {
           const isActive = item.exact
             ? currentPath === item.path
@@ -61,129 +64,189 @@ const BottomNavigation = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`nav-item ${isActive ? "active" : ""} ${
-                item.floating ? "floating" : ""
-              }`}
+              className={`nav-item ${isActive ? "active" : ""}`}
+              onMouseEnter={() => setActiveHover(item.path)}
+              onMouseLeave={() => setActiveHover(null)}
+              style={isActive ? { "--active-color": item.color } : {}}
             >
-              <div className="nav-icon">{item.icon}</div>
-              <span className="nav-label">{item.label}</span>
+              <div className="nav-icon-container">
+                <AnimatePresence>
+                  {(isActive || activeHover === item.path) && (
+                    <motion.div
+                      className="nav-background"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      style={{ backgroundColor: item.color }}
+                    />
+                  )}
+                </AnimatePresence>
+                <div className="nav-icon">
+                  {item.notification ? (
+                    <div className="notification-wrapper">
+                      {item.icon}
+                      <motion.span
+                        className="notification-badge"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring" }}
+                      />
+                    </div>
+                  ) : (
+                    item.icon
+                  )}
+                </div>
+              </div>
+              <motion.span
+                className="nav-label"
+                initial={{ y: 0 }}
+                animate={{
+                  y: isActive ? -5 : 0,
+                  color: isActive ? item.color : "#666",
+                }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              >
+                {item.label}
+              </motion.span>
+
+              {isActive && (
+                <motion.div
+                  className="active-indicator"
+                  initial={{ width: 0 }}
+                  animate={{ width: "60%" }}
+                  transition={{ duration: 0.3 }}
+                  style={{ backgroundColor: item.color }}
+                />
+              )}
             </Link>
           );
         })}
-      </div>
-      <style jsx="true">{`
-        .bottom-navigation {
+      </motion.nav>
+
+      <style jsx>{`
+        .nav-container {
           position: fixed;
           bottom: 0;
           left: 0;
           width: 100%;
-          background-color: #fff;
-          border-top: 1px solid #f0f0f0;
+          display: flex;
+          justify-content: center;
+          z-index: 1000;
+          padding: 0 20px 20px;
+          box-sizing: border-box;
+        }
+
+        .bottom-navigation {
+          background-color: rgba(255, 255, 255, 0.95);
+          border-radius: 24px;
           display: flex;
           justify-content: space-around;
           align-items: center;
-          padding: 8px 0 10px;
-          box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
-          z-index: 1000;
+          padding: 16px 0;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          max-width: 500px;
+          width: 100%;
+          position: relative;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
         }
 
         .nav-item {
           display: flex;
           flex-direction: column;
           align-items: center;
-          font-size: 10px;
-          color: #888;
+          font-size: 12px;
+          color: #666;
           text-decoration: none;
-          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+          transition: all 0.3s ease;
           position: relative;
           flex: 1;
-          padding: 4px 0;
-          opacity: 0.8;
+          padding: 5px 0;
+          z-index: 1;
+          gap: 8px;
         }
 
         .nav-item:hover {
-          color: #9900ff;
-          opacity: 1;
+          color: var(--active-color, #5e0d97);
         }
 
         .nav-item.active {
-          color: #9900ff;
-          opacity: 1;
-          transform: translateY(-2px);
+          color: var(--active-color, #5e0d97);
         }
 
-        .nav-icon {
-          margin-bottom: 4px;
-          transition: all 0.3s ease;
+        .nav-icon-container {
           position: relative;
-        }
-
-        .nav-item.active .nav-icon {
-          transform: scale(1.15);
-        }
-
-        .nav-label {
-          font-size: 10px;
-          font-weight: 500;
-          letter-spacing: 0.2px;
-        }
-
-        /* Floating Action Button */
-        .nav-item.floating {
-          position: relative;
-          z-index: 1001;
-        }
-
-        .floating-action {
-          background: linear-gradient(135deg, #9900ff, #7b00cc);
-          color: white;
-          width: 50px;
-          height: 50px;
-          border-radius: 50%;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 20px rgba(153, 0, 255, 0.3);
-          transform: translateY(-20px);
+        }
+
+        .nav-background {
+          position: absolute;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          opacity: 0.15;
+        }
+
+        .nav-icon {
+          position: relative;
+          z-index: 2;
           transition: all 0.3s ease;
         }
 
-        .nav-item.floating .nav-label {
+        .nav-item.active .nav-icon {
+          transform: translateY(-5px) scale(1.1);
+        }
+
+        .nav-label {
+          font-size: 12px;
+          font-weight: 500;
+          transition: all 0.3s ease;
+        }
+
+        .active-indicator {
           position: absolute;
-          bottom: -20px;
-          color: #9900ff;
-          font-weight: 600;
+          bottom: 0;
+          width: 60%;
+          height: 3px;
+          border-radius: 3px;
         }
 
-        .nav-item.floating.active .floating-action {
-          transform: translateY(-25px) scale(1.05);
-        }
-
-        /* Notification Badge */
         .notification-wrapper {
           position: relative;
+          display: flex;
         }
 
         .notification-badge {
           position: absolute;
           top: -3px;
-          right: -3px;
-          width: 8px;
-          height: 8px;
+          right: -5px;
+          width: 10px;
+          height: 10px;
           background-color: #ff4757;
           border-radius: 50%;
           border: 2px solid white;
+          box-shadow: 0 0 5px rgba(255, 71, 87, 0.5);
         }
 
-        /* Responsive Design */
-        @media (min-width: 768px) {
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+          .nav-container {
+            padding: 0 15px 15px;
+          }
+
           .bottom-navigation {
-            max-width: 500px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 30px 30px 0 0;
-            bottom: 20px;
-            border: 1px solid #f0f0f0;
+            padding: 12px 0;
+            border-radius: 20px;
+          }
+
+          .nav-icon-container {
+            width: 36px;
+            height: 36px;
           }
 
           .nav-label {
@@ -193,17 +256,11 @@ const BottomNavigation = () => {
 
         @media (max-width: 350px) {
           .nav-label {
-            font-size: 9px;
-          }
-
-          .floating-action {
-            width: 44px;
-            height: 44px;
+            font-size: 10px;
           }
         }
       `}</style>
-      ;
-    </>
+    </div>
   );
 };
 
