@@ -18,6 +18,11 @@ import LabTest from "./pages/Lab/Test";
 import LabReport from "./pages/Lab/Reports";
 import LabProfile from "./pages/Lab/Profile";
 
+import HubDashboard from "./pages/Hub/Dashboard";
+import HubOrders from "./pages/Hub/Orders";
+import HubAssignment from "./pages/Hub/Assignment";
+import HubTrack from "./pages/Hub/Track";
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -39,6 +44,11 @@ const App = () => {
         <Route path="/lab/test" element={<LabTest />} />
         <Route path="/lab/report" element={<LabReport />} />
         <Route path="/lab/profile" element={<LabProfile />} />
+
+        <Route path="/hub/dashboard" element={<HubDashboard />} />
+        <Route path="/hub/orders" element={<HubOrders />} />
+        <Route path="/hub/assignment" element={<HubAssignment />} />
+        <Route path="/hub/track" element={<HubTrack />} />
 
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
