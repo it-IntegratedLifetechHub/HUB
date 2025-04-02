@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const PatientAuth = () => {
+const PatientLogin = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: Phone/Name, 2: OTP Verification
+  const [step, setStep] = useState(1); // 1: Phone, 2: OTP
   const [formData, setFormData] = useState({
-    name: "",
     phone: "",
     otp: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [authAction, setAuthAction] = useState(""); // 'register' or 'login'
-  const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [staticOTP] = useState("123456"); // Static OTP for demo
 
-  const STATIC_OTP = "123456"; // Static OTP for demo
   const OTP_RESEND_DELAY = 30; // Seconds
 
   useEffect(() => {
@@ -29,17 +26,12 @@ const PatientAuth = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Format phone number input
     if (name === "phone") {
       const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
       setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
-    }
-    // Format OTP input
-    else if (name === "otp") {
+    } else if (name === "otp") {
       const digitsOnly = value.replace(/\D/g, "").slice(0, 6);
       setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value.trim() }));
     }
 
     setError("");
@@ -47,14 +39,6 @@ const PatientAuth = () => {
 
   const validateForm = () => {
     if (step === 1) {
-      if (!formData.name.trim()) {
-        setError("Please enter your full name");
-        return false;
-      }
-      if (formData.name.trim().length < 2) {
-        setError("Name must be at least 2 characters");
-        return false;
-      }
       if (!/^\d{10}$/.test(formData.phone)) {
         setError("Please enter a valid 10-digit phone number");
         return false;
@@ -68,55 +52,77 @@ const PatientAuth = () => {
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSendOTP = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
     setError("");
 
     try {
-      if (step === 1) {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/patients/auth`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: formData.name.trim(),
-              phone: formData.phone,
-            }),
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Authentication failed");
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/patients/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone: formData.phone,
+          }),
         }
+      );
 
-        setAuthAction(data.action);
-        setOtpSent(true);
-        setCountdown(OTP_RESEND_DELAY);
-        setStep(2);
-      } else {
-        // Verify OTP
-        if (formData.otp === STATIC_OTP) {
-          navigate("/patient", {
-            state: {
-              authAction,
-              phone: formData.phone,
-              name: formData.name,
-            },
-          });
-        } else {
-          setError("Invalid OTP. Please try again.");
-        }
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP");
       }
+
+      alert(`OTP sent to ${formData.phone}\nDemo OTP: ${staticOTP}`);
+      setCountdown(OTP_RESEND_DELAY);
+      setStep(2);
     } catch (err) {
-      setError(err.message || "An error occurred. Please try again.");
+      setError(err.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/patients/verify-login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone: formData.phone,
+            otp: formData.otp,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "OTP verification failed");
+      }
+
+      navigate("/patient", {
+        state: {
+          phone: data.data.phone,
+          name: data.data.name,
+        },
+      });
+    } catch (err) {
+      setError(err.message || "OTP verification failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -124,8 +130,7 @@ const PatientAuth = () => {
 
   const handleResendOTP = () => {
     if (countdown > 0) return;
-
-    alert(`Static OTP: ${STATIC_OTP}\n(For demo purposes)`);
+    alert(`OTP resent to ${formData.phone}\nDemo OTP: ${staticOTP}`);
     setCountdown(OTP_RESEND_DELAY);
   };
 
@@ -133,45 +138,38 @@ const PatientAuth = () => {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>
-          {step === 1 ? "Patient Authentication" : "Verify OTP"}
+          {step === 1 ? "Patient Login" : "Verify OTP"}
         </h1>
 
         {error && <div style={styles.error}>{error}</div>}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            step === 1 ? handleSendOTP() : handleVerifyOTP();
+          }}
+          style={styles.form}
+        >
           {step === 1 ? (
-            <>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  style={styles.input}
-                  required
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  style={styles.input}
-                  pattern="[0-9]{10}"
-                  required
-                />
-              </div>
-            </>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Phone Number</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                style={styles.input}
+                pattern="[0-9]{10}"
+                placeholder="Enter 10-digit phone number"
+                required
+              />
+            </div>
           ) : (
             <>
               <p style={styles.otpText}>
                 We've sent a 6-digit OTP to {formData.phone}
                 <br />
-                <small style={styles.hint}>Use OTP: {STATIC_OTP}</small>
+                <small style={styles.hint}>Demo OTP: {staticOTP}</small>
               </p>
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Enter OTP</label>
@@ -183,19 +181,24 @@ const PatientAuth = () => {
                   style={styles.input}
                   pattern="[0-9]{6}"
                   maxLength="6"
+                  placeholder="Enter 6-digit OTP"
                   required
                 />
               </div>
             </>
           )}
 
-          <button type="submit" style={styles.button} disabled={isLoading}>
+          <button
+            type="submit"
+            style={styles.button}
+            disabled={isLoading || (step === 2 && !formData.otp)}
+          >
             {isLoading ? (
               <span style={styles.spinner}></span>
             ) : step === 1 ? (
-              "Continue"
+              "Send OTP"
             ) : (
-              "Verify & Continue"
+              "Verify OTP"
             )}
           </button>
         </form>
@@ -207,8 +210,21 @@ const PatientAuth = () => {
               type="button"
               style={styles.resendButton}
               onClick={handleResendOTP}
+              disabled={countdown > 0}
             >
-              Resend
+              Resend {countdown > 0 ? `(${countdown}s)` : ""}
+            </button>
+          </p>
+        )}
+
+        {step === 1 && (
+          <p style={styles.registerText}>
+            New patient?{" "}
+            <button
+              style={styles.registerLink}
+              onClick={() => navigate("/patient/registration")}
+            >
+              Register here
             </button>
           </p>
         )}
@@ -217,7 +233,6 @@ const PatientAuth = () => {
   );
 };
 
-// Updated styles with error styling
 const styles = {
   container: {
     display: "flex",
@@ -275,6 +290,9 @@ const styles = {
     fontSize: "16px",
     transition: "all 0.3s",
     outline: "none",
+    "::placeholder": {
+      color: "#aaa",
+    },
     ":focus": {
       borderColor: "#5e0d97",
       boxShadow: "0 0 0 3px rgba(94, 13, 151, 0.1)",
@@ -297,8 +315,10 @@ const styles = {
       boxShadow: "0 5px 15px rgba(94, 13, 151, 0.3)",
     },
     ":disabled": {
-      opacity: "0.7",
+      background: "#aaa",
       cursor: "not-allowed",
+      transform: "none",
+      boxShadow: "none",
     },
   },
   spinner: {
@@ -317,6 +337,7 @@ const styles = {
     textAlign: "center",
     color: "#666",
     marginBottom: "20px",
+    lineHeight: "1.5",
   },
   hint: {
     color: "#888",
@@ -338,7 +359,28 @@ const styles = {
     ":hover": {
       textDecoration: "underline",
     },
+    ":disabled": {
+      color: "#999",
+      cursor: "not-allowed",
+    },
+  },
+  registerText: {
+    textAlign: "center",
+    color: "#666",
+    marginTop: "20px",
+    fontSize: "14px",
+  },
+  registerLink: {
+    background: "none",
+    border: "none",
+    color: "#5e0d97",
+    cursor: "pointer",
+    fontWeight: "600",
+    padding: "0 5px",
+    ":hover": {
+      textDecoration: "underline",
+    },
   },
 };
 
-export default PatientAuth;
+export default PatientLogin;

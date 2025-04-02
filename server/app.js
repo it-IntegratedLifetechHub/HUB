@@ -29,8 +29,6 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 // Database connection with modern options
 mongoose
   .connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
   })

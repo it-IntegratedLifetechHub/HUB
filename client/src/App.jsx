@@ -22,7 +22,9 @@ import HubDashboard from "./pages/Hub/Dashboard";
 import HubOrders from "./pages/Hub/Orders";
 import HubAssignment from "./pages/Hub/Assignment";
 import HubTrack from "./pages/Hub/Track";
-import PatientAuth from "./pages/Patient/PatientAuth";
+
+import PatientRegistration from "./pages/Patient/PatientRegistration";
+import PatientLogin from "./pages/Patient/PatientLogin";
 
 const App = () => {
   return (
@@ -30,8 +32,9 @@ const App = () => {
       <AutoScroll />
 
       <Routes>
+        <Route path="/patient/registration" element={<PatientRegistration />} />
+        <Route path="/patient/login" element={<PatientLogin />} />
         <Route path="/patient" element={<Home />} />
-        <Route path="/patient/auth" element={<PatientAuth />} />
         <Route path="/service/:serviceName" element={<SingleService />} />
         <Route path="/service/:serviceName/:test" element={<SingleTest />} />
         <Route path="/orders" element={<Orders />} />

@@ -25,30 +25,14 @@ const PatientSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt automatically
-    toJSON: {
-      virtuals: true,
-      transform: function (doc, ret) {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-      },
-    },
-    toObject: {
-      virtuals: true,
-      transform: function (doc, ret) {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-      },
-    },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Add index for faster queries
-PatientSchema.index({ phone: 1 }, { unique: true });
+// Removed duplicate index definition
+// The unique: true above already creates the index
 
 const Patient = mongoose.model("Patient", PatientSchema);
+
 module.exports = Patient;
