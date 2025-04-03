@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const PatientLogin = () => {
+const PatientLogin = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  // Form states
   const [step, setStep] = useState(1); // 1: Phone, 2: OTP
   const [formData, setFormData] = useState({
     phone: "",
     otp: "",
   });
+
+  // UI states
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [staticOTP] = useState("123456"); // Static OTP for demo
+  const [authData, setAuthData] = useState(null); // Store auth data from backend
 
   const OTP_RESEND_DELAY = 30; // Seconds
 
+  // Countdown timer
   useEffect(() => {
     let timer;
     if (countdown > 0) {
@@ -23,6 +30,7 @@ const PatientLogin = () => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -37,6 +45,7 @@ const PatientLogin = () => {
     setError("");
   };
 
+  // Form validation
   const validateForm = () => {
     if (step === 1) {
       if (!/^\d{10}$/.test(formData.phone)) {
@@ -52,6 +61,7 @@ const PatientLogin = () => {
     return true;
   };
 
+  // Check if user exists and send OTP
   const handleSendOTP = async () => {
     if (!validateForm()) return;
 
@@ -59,35 +69,41 @@ const PatientLogin = () => {
     setError("");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/patients/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone: formData.phone,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone: formData.phone }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to send OTP");
+        throw new Error(
+          data.message || "User not found. Please register first."
+        );
       }
 
+      if (!data.token) {
+        throw new Error("Authentication token missing in response");
+      }
+
+      // Store the authentication data
+      setAuthData(data);
+
+      // Show OTP step (frontend-only)
       alert(`OTP sent to ${formData.phone}\nDemo OTP: ${staticOTP}`);
       setCountdown(OTP_RESEND_DELAY);
       setStep(2);
     } catch (err) {
-      setError(err.message || "Failed to send OTP. Please try again.");
+      setError(err.message || "Failed to verify phone number");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Verify OTP and login
   const handleVerifyOTP = async () => {
     if (!validateForm()) return;
 
@@ -95,34 +111,27 @@ const PatientLogin = () => {
     setError("");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/patients/verify-login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone: formData.phone,
-            otp: formData.otp,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "OTP verification failed");
+      // Frontend OTP verification
+      if (formData.otp !== staticOTP) {
+        throw new Error("Invalid OTP. Please try again.");
       }
 
-      navigate("/patient", {
-        state: {
-          phone: data.data.phone,
-          name: data.data.name,
-        },
-      });
+      // Verify we have the auth data
+      if (!authData?.token) {
+        throw new Error("Authentication data missing. Please start over.");
+      }
+
+      // Store authentication data
+      localStorage.setItem("token", authData.token);
+      localStorage.setItem("user", JSON.stringify(authData.user));
+
+      // Update authentication state
+      setIsAuthenticated(true);
+
+      // Navigate to patient dashboard
+      navigate("/patient");
     } catch (err) {
-      setError(err.message || "OTP verification failed. Please try again.");
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +142,6 @@ const PatientLogin = () => {
     alert(`OTP resent to ${formData.phone}\nDemo OTP: ${staticOTP}`);
     setCountdown(OTP_RESEND_DELAY);
   };
-
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -190,7 +198,10 @@ const PatientLogin = () => {
 
           <button
             type="submit"
-            style={styles.button}
+            style={{
+              ...styles.button,
+              ...(isLoading ? styles.buttonDisabled : {}),
+            }}
             disabled={isLoading || (step === 2 && !formData.otp)}
           >
             {isLoading ? (
@@ -223,6 +234,7 @@ const PatientLogin = () => {
             <button
               style={styles.registerLink}
               onClick={() => navigate("/patient/registration")}
+              type="button"
             >
               Register here
             </button>

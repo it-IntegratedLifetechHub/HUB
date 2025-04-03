@@ -1,142 +1,88 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const PatientRegistration = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: Registration, 2: OTP Verification
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  // Form data
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    otp: "",
   });
+
+  // UI states
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [staticOTP] = useState("123456"); // Static OTP for demo
-
-  const OTP_RESEND_DELAY = 30; // Seconds
-
-  useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [countdown]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "phone") {
-      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
-      setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
-    } else if (name === "otp") {
-      const digitsOnly = value.replace(/\D/g, "").slice(0, 6);
-      setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
+      setFormData({
+        ...formData,
+        [name]: value.replace(/\D/g, "").slice(0, 10),
+      });
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value.trim() }));
+      setFormData({ ...formData, [name]: value.trim() });
     }
-
     setError("");
   };
 
   const validateForm = () => {
-    if (step === 1) {
-      if (!formData.name.trim()) {
-        setError("Please enter your full name");
-        return false;
-      }
-      if (formData.name.trim().length < 2) {
-        setError("Name must be at least 2 characters");
-        return false;
-      }
-      if (!/^\d{10}$/.test(formData.phone)) {
-        setError("Please enter a valid 10-digit phone number");
-        return false;
-      }
-    } else {
-      if (!/^\d{6}$/.test(formData.otp)) {
-        setError("Please enter a valid 6-digit OTP");
-        return false;
-      }
+    if (!formData.name.trim()) {
+      setError("Please enter your full name");
+      return false;
+    }
+    if (formData.name.length < 3) {
+      setError("Name must be at least 3 characters");
+      return false;
+    }
+    if (formData.phone.length !== 10) {
+      setError("Please enter a valid 10-digit phone number");
+      return false;
     }
     return true;
   };
 
-  const handleSendOTP = async () => {
+  const handleRegister = async (e) => {
+    e.preventDefault();
     if (!validateForm()) return;
 
     setIsLoading(true);
     setError("");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/patients/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name.trim(),
-            phone: formData.phone,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to send OTP");
-      }
-
-      alert(`OTP sent to ${formData.phone}\nDemo OTP: ${staticOTP}`);
-      setCountdown(OTP_RESEND_DELAY);
-      setStep(2);
-    } catch (err) {
-      setError(err.message || "Failed to send OTP. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/patients/verify-registration`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            phone: formData.phone,
-            otp: formData.otp,
-          }),
+        // Handle backend validation errors
+        if (data.error && data.error.details) {
+          // Joi validation errors
+          throw new Error(data.error.details[0].message);
         }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
         throw new Error(data.message || "Registration failed");
       }
 
+      // Registration successful
       setSuccess(true);
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       setTimeout(() => {
-        navigate("/patient", {
-          state: {
-            phone: data.data.phone,
-            name: data.data.name,
-          },
-        });
+        navigate("/patient", { state: data.user });
       }, 1500);
     } catch (err) {
       setError(err.message || "Registration failed. Please try again.");
@@ -145,18 +91,10 @@ const PatientRegistration = () => {
     }
   };
 
-  const handleResendOTP = () => {
-    if (countdown > 0) return;
-    alert(`OTP resent to ${formData.phone}\nDemo OTP: ${staticOTP}`);
-    setCountdown(OTP_RESEND_DELAY);
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>
-          {step === 1 ? "Patient Registration" : "Verify OTP"}
-        </h1>
+        <h1 style={styles.title}>Patient Registration</h1>
 
         {error && <div style={styles.error}>{error}</div>}
         {success && (
@@ -165,106 +103,59 @@ const PatientRegistration = () => {
           </div>
         )}
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            step === 1 ? handleSendOTP() : handleVerifyOTP();
-          }}
-          style={styles.form}
-        >
-          {step === 1 ? (
-            <>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
+        <form onSubmit={handleRegister} style={styles.form}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Full Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              style={styles.input}
+              placeholder="Enter your full name"
+              required
+              minLength="3"
+              maxLength="100"
+            />
+          </div>
 
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  style={styles.input}
-                  pattern="[0-9]{10}"
-                  placeholder="Enter 10-digit phone number"
-                  required
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <p style={styles.otpText}>
-                We've sent a 6-digit OTP to {formData.phone}
-                <br />
-                <small style={styles.hint}>Demo OTP: {staticOTP}</small>
-              </p>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Enter OTP</label>
-                <input
-                  type="text"
-                  name="otp"
-                  value={formData.otp}
-                  onChange={handleChange}
-                  style={styles.input}
-                  pattern="[0-9]{6}"
-                  maxLength="6"
-                  placeholder="Enter 6-digit OTP"
-                  required
-                />
-              </div>
-            </>
-          )}
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Phone Number</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              style={styles.input}
+              placeholder="Enter 10-digit number"
+              required
+              pattern="[0-9]{10}"
+              title="10 digit phone number"
+            />
+          </div>
 
           <button
             type="submit"
-            style={styles.button}
-            disabled={isLoading || (step === 2 && !formData.otp)}
+            style={{
+              ...styles.button,
+              ...(isLoading ? styles.buttonDisabled : {}),
+            }}
+            disabled={isLoading}
           >
-            {isLoading ? (
-              <span style={styles.spinner}></span>
-            ) : step === 1 ? (
-              "Send OTP"
-            ) : (
-              "Verify & Register"
-            )}
+            {isLoading ? "Registering..." : "Register"}
           </button>
         </form>
 
-        {step === 2 && (
-          <p style={styles.resendText}>
-            Didn't receive OTP?{" "}
-            <button
-              type="button"
-              style={styles.resendButton}
-              onClick={handleResendOTP}
-              disabled={countdown > 0}
-            >
-              Resend {countdown > 0 ? `(${countdown}s)` : ""}
-            </button>
-          </p>
-        )}
-
-        {step === 1 && (
-          <p style={styles.loginText}>
-            Already registered?{" "}
-            <button
-              style={styles.loginLink}
-              onClick={() => navigate("/patient/login")}
-            >
-              Login here
-            </button>
-          </p>
-        )}
+        <p style={styles.loginText}>
+          Already registered?{" "}
+          <button
+            style={styles.loginLink}
+            onClick={() => navigate("/patient/login")}
+            type="button"
+          >
+            Login here
+          </button>
+        </p>
       </div>
     </div>
   );
