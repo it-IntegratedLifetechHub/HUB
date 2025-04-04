@@ -1,59 +1,323 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUserCircle,
   FaEdit,
-  FaHistory,
-  FaFileMedicalAlt,
   FaHeartbeat,
+  FaSave,
+  FaTimes,
 } from "react-icons/fa";
-import { MdPersonalInjury, MdWorkOutline } from "react-icons/md";
+import { MdWorkOutline, MdEmergency } from "react-icons/md";
+import { IoMdFitness, IoMdMedical } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import BottomNavigation from "../../components/BottomNav";
 
 const Profile = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [activeSection, setActiveSection] = useState("personal");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
+  const [profileData, setProfileData] = useState({
+    personal: {},
+    medical: {},
+    lifestyle: {},
+  });
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const profileData = {
+  // Enhanced field configuration with icons and validation
+  const fieldConfig = {
     personal: {
-      Name: "John Doe",
-      "Contact Number": "+1 234 567 890",
-      "Email ID": "johndoe@example.com",
-      Gender: "Male",
-      DOB: "Jan 1, 1990",
-      "Blood Group": "O+",
-      "Marital Status": "Single",
-      Height: "5'9\"",
-      Weight: "70kg",
-      "Emergency Contact": "+1 987 654 321",
-      Location: "New York, USA",
+      Name: {
+        field: "name",
+        type: "text",
+        icon: <FaUserCircle className="field-icon" />,
+        required: true,
+      },
+      "Contact Number": {
+        field: "phone",
+        type: "tel",
+        icon: <MdEmergency className="field-icon" />,
+        pattern: "^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-s./0-9]*$",
+      },
+      "Email ID": {
+        field: "email",
+        type: "email",
+        icon: <FaUserCircle className="field-icon" />,
+      },
+      Gender: {
+        field: "gender",
+        type: "select",
+        icon: <FaUserCircle className="field-icon" />,
+        options: ["Male", "Female", "Other", "Prefer not to say"],
+      },
+      DOB: {
+        field: "dob",
+        type: "date",
+        icon: <FaUserCircle className="field-icon" />,
+        transform: (val) => (val ? new Date(val).toLocaleDateString() : ""),
+        reverse: (val) => (val ? new Date(val).toISOString() : null),
+      },
+      "Blood Group": {
+        field: "bloodGroup",
+        type: "select",
+        icon: <IoMdMedical className="field-icon" />,
+        options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"],
+      },
+      "Marital Status": {
+        field: "maritalStatus",
+        type: "select",
+        icon: <FaUserCircle className="field-icon" />,
+        options: ["Single", "Married", "Divorced", "Widowed", "Separated"],
+      },
+      Height: {
+        field: "height",
+        type: "text",
+        icon: <IoMdFitness className="field-icon" />,
+        suffix: "cm",
+      },
+      Weight: {
+        field: "weight",
+        type: "text",
+        icon: <IoMdFitness className="field-icon" />,
+        suffix: "kg",
+      },
+      "Emergency Contact": {
+        field: "emergencyContact.phone",
+        type: "tel",
+        icon: <MdEmergency className="field-icon" />,
+      },
+      Location: {
+        field: "location",
+        type: "text",
+        icon: <FaUserCircle className="field-icon" />,
+      },
     },
     medical: {
-      Allergies: "Peanuts, Shellfish",
-      "Current Medications": "None",
-      "Past Medications": "Antibiotics (2023), Antihistamines (2022)",
-      Injuries: "Fractured wrist (2018)",
-      Surgeries: "Appendectomy (2015)",
-      "Chronic Conditions": "None",
-      "Family History": "Diabetes, Hypertension",
+      Allergies: {
+        field: "allergies",
+        type: "textarea",
+        icon: <IoMdMedical className="field-icon" />,
+        transform: (val) => val?.join(", ") || "",
+        reverse: (val) =>
+          val
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => item),
+        placeholder: "List allergies separated by commas",
+      },
+      "Current Medications": {
+        field: "currentMedications",
+        type: "textarea",
+        icon: <IoMdMedical className="field-icon" />,
+        transform: (val) =>
+          val?.map((m) => `${m.name} (${m.dosage})`).join(", ") || "",
+        reverse: (val) =>
+          val
+            .split(",")
+            .map((item) => {
+              const match = item.trim().match(/(.*?)\((.*?)\)/);
+              return match
+                ? { name: match[1].trim(), dosage: match[2].trim() }
+                : null;
+            })
+            .filter((item) => item),
+        placeholder: "Format: Medication (Dosage), e.g., Aspirin (500mg)",
+      },
+      "Past Medications": {
+        field: "pastMedications",
+        type: "textarea",
+        icon: <IoMdMedical className="field-icon" />,
+        transform: (val) =>
+          val?.map((m) => `${m.name} (${m.year})`).join(", ") || "",
+        reverse: (val) =>
+          val
+            .split(",")
+            .map((item) => {
+              const match = item.trim().match(/(.*?)\((.*?)\)/);
+              return match
+                ? { name: match[1].trim(), year: parseInt(match[2].trim()) }
+                : null;
+            })
+            .filter((item) => item),
+        placeholder: "Format: Medication (Year), e.g., Penicillin (2020)",
+      },
+      Injuries: {
+        field: "injuries",
+        type: "textarea",
+        icon: <IoMdMedical className="field-icon" />,
+        transform: (val) =>
+          val?.map((i) => `${i.description} (${i.year})`).join(", ") || "",
+        reverse: (val) =>
+          val
+            .split(",")
+            .map((item) => {
+              const match = item.trim().match(/(.*?)\((.*?)\)/);
+              return match
+                ? {
+                    description: match[1].trim(),
+                    year: parseInt(match[2].trim()),
+                  }
+                : null;
+            })
+            .filter((item) => item),
+        placeholder: "Format: Injury (Year), e.g., Broken arm (2018)",
+      },
+      Surgeries: {
+        field: "surgeries",
+        type: "textarea",
+        icon: <IoMdMedical className="field-icon" />,
+        transform: (val) =>
+          val?.map((s) => `${s.name} (${s.year})`).join(", ") || "",
+        reverse: (val) =>
+          val
+            .split(",")
+            .map((item) => {
+              const match = item.trim().match(/(.*?)\((.*?)\)/);
+              return match
+                ? { name: match[1].trim(), year: parseInt(match[2].trim()) }
+                : null;
+            })
+            .filter((item) => item),
+        placeholder: "Format: Surgery (Year), e.g., Appendectomy (2015)",
+      },
+      "Chronic Conditions": {
+        field: "chronicConditions",
+        type: "textarea",
+        icon: <IoMdMedical className="field-icon" />,
+        transform: (val) => val?.join(", ") || "",
+        reverse: (val) =>
+          val
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => item),
+        placeholder: "List conditions separated by commas",
+      },
+      "Family History": {
+        field: "familyHistory",
+        type: "textarea",
+        icon: <IoMdMedical className="field-icon" />,
+        transform: (val) => val?.join(", ") || "",
+        reverse: (val) =>
+          val
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => item),
+        placeholder: "List family medical history separated by commas",
+      },
     },
     lifestyle: {
-      "Smoking Habits": "Non-Smoker",
-      "Alcohol Consumption": "Occasional",
-      "Activity Level": "Active (3-4x/week)",
-      "Food Preference": "Vegetarian",
-      Occupation: "Software Engineer",
-      "Sleep Pattern": "7-8 hours/night",
-      "Stress Level": "Moderate",
+      "Smoking Habits": {
+        field: "smokingHabits",
+        type: "select",
+        icon: <MdWorkOutline className="field-icon" />,
+        options: ["Non-smoker", "Former smoker", "Current smoker"],
+      },
+      "Alcohol Consumption": {
+        field: "alcoholConsumption",
+        type: "select",
+        icon: <MdWorkOutline className="field-icon" />,
+        options: ["Non-drinker", "Occasional", "Regular"],
+      },
+      "Activity Level": {
+        field: "activityLevel",
+        type: "select",
+        icon: <IoMdFitness className="field-icon" />,
+        options: [
+          "Sedentary",
+          "Lightly active",
+          "Moderately active",
+          "Very active",
+          "Extremely active",
+        ],
+      },
+      "Food Preference": {
+        field: "foodPreference",
+        type: "select",
+        icon: <MdWorkOutline className="field-icon" />,
+        options: [
+          "Vegetarian",
+          "Vegan",
+          "Non-vegetarian",
+          "Pescatarian",
+          "Other",
+        ],
+      },
+      Occupation: {
+        field: "occupation",
+        type: "text",
+        icon: <MdWorkOutline className="field-icon" />,
+      },
+      "Sleep Pattern": {
+        field: "sleepPattern",
+        type: "text",
+        icon: <MdWorkOutline className="field-icon" />,
+        placeholder: "e.g., 7-8 hours/night",
+      },
+      "Stress Level": {
+        field: "stressLevel",
+        type: "select",
+        icon: <MdWorkOutline className="field-icon" />,
+        options: ["Low", "Moderate", "High"],
+      },
     },
   };
 
+  // Section icons for tabs
   const sectionIcons = {
     personal: <FaUserCircle className="section-icon" />,
     medical: <FaHeartbeat className="section-icon" />,
     lifestyle: <MdWorkOutline className="section-icon" />,
+  };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/api/patient/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+
+        const { data: patient } = await response.json();
+        transformPatientData(patient);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        toast.error("Failed to load profile");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [API_URL]);
+
+  const transformPatientData = (patient) => {
+    const transformedData = {};
+
+    Object.keys(fieldConfig).forEach((section) => {
+      transformedData[section] = {};
+      Object.entries(fieldConfig[section]).forEach(([displayName, config]) => {
+        const value = config.field
+          .split(".")
+          .reduce(
+            (obj, key) => (obj && obj[key] !== undefined ? obj[key] : null),
+            patient
+          );
+        transformedData[section][displayName] = config.transform
+          ? config.transform(value)
+          : value || "";
+      });
+    });
+
+    setProfileData(transformedData);
   };
 
   const handleEditClick = () => {
@@ -66,159 +330,326 @@ const Profile = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically send the updated data to your backend
-    toast.success("Profile updated successfully!");
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const updates = {};
+
+      // Validate required fields
+      const requiredFields = Object.entries(fieldConfig[activeSection])
+        .filter(([_, config]) => config.required)
+        .map(([displayName]) => displayName);
+
+      const missingFields = requiredFields.filter(
+        (field) => !formData[field] || formData[field].trim() === ""
+      );
+
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Please fill in required fields: ${missingFields.join(", ")}`
+        );
+      }
+
+      // Transform form data back to backend structure
+      Object.entries(formData).forEach(([displayName, value]) => {
+        if (value === "" || !value) return;
+
+        const config = fieldConfig[activeSection][displayName];
+        if (!config) return;
+
+        const fieldPath = config.field.split(".");
+        const finalField = fieldPath.pop();
+        let target = updates;
+
+        // Handle nested fields
+        fieldPath.forEach((part) => {
+          target[part] = target[part] || {};
+          target = target[part];
+        });
+
+        target[finalField] = config.reverse ? config.reverse(value) : value;
+      });
+
+      const updateResponse = await fetch(`${API_URL}/api/patient/me`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+
+      const responseData = await updateResponse.json();
+
+      if (!updateResponse.ok) {
+        throw new Error(responseData.message || "Failed to update profile");
+      }
+
+      transformPatientData(responseData.data);
+      setIsEditing(false);
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      toast.error(err.message || "Failed to update profile");
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
   };
 
-  return (
-    <>
-      <div className="profile-container">
-        <div className="profile-header">
-          <div className="avatar-container">
-            <FaUserCircle size={100} className="profile-icon" />
-            <button className="edit-avatar-btn">
-              <FaEdit size={18} />
-            </button>
-          </div>
-          <div className="profile-info">
-            <h2 className="profile-name">{profileData.personal.Name}</h2>
-            <p className="profile-email">{profileData.personal["Email ID"]}</p>
-            <p className="profile-meta">
-              {profileData.personal["Blood Group"]} •{" "}
-              {profileData.personal.Age || "34"} yrs
-            </p>
-          </div>
-        </div>
+  const renderInputField = (name, value, config) => {
+    const inputId = `input-${name.replace(/\s+/g, "-").toLowerCase()}`;
 
-        {/* Toggle Section */}
-        <div className="toggle-container">
-          {Object.keys(profileData).map((section) => (
-            <button
-              key={section}
-              className={`toggle-btn ${
-                activeSection === section ? "active" : ""
-              }`}
-              onClick={() => setActiveSection(section)}
-            >
-              {sectionIcons[section]}
-              {section.charAt(0).toUpperCase() + section.slice(1)}
-            </button>
-          ))}
-        </div>
+    return (
+      <div className="form-field">
+        <label htmlFor={inputId} className="form-label">
+          {config.icon}
+          {name}
+          {config.required && <span className="required-asterisk">*</span>}
+        </label>
 
-        {/* Profile Details Section */}
-        <div className="profile-section">
-          <div className="section-header">
-            <h3 className="section-title">
-              {sectionIcons[activeSection]}
-              {activeSection.charAt(0).toUpperCase() +
-                activeSection.slice(1)}{" "}
-              Information
-            </h3>
-            {!isEditing && (
-              <button className="edit-btn" onClick={handleEditClick}>
-                <FaEdit /> Edit
-              </button>
+        {config.type === "textarea" ? (
+          <textarea
+            id={inputId}
+            name={name}
+            value={value}
+            onChange={handleInputChange}
+            className="form-input"
+            rows={3}
+            placeholder={config.placeholder}
+            required={config.required}
+          />
+        ) : config.type === "select" ? (
+          <select
+            id={inputId}
+            name={name}
+            value={value}
+            onChange={handleInputChange}
+            className="form-input"
+            required={config.required}
+          >
+            <option value="">Select an option</option>
+            {config.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="input-with-suffix">
+            <input
+              id={inputId}
+              type={config.type || "text"}
+              name={name}
+              value={value}
+              onChange={handleInputChange}
+              className="form-input"
+              placeholder={config.placeholder}
+              pattern={config.pattern}
+              required={config.required}
+            />
+            {config.suffix && (
+              <span className="input-suffix">{config.suffix}</span>
             )}
           </div>
+        )}
+      </div>
+    );
+  };
 
-          {isEditing ? (
-            <div className="edit-form">
-              {Object.entries(formData).map(([key, value]) => (
-                <div key={key} className="form-group">
-                  <label className="form-label">{key}</label>
-                  <input
-                    type="text"
-                    name={key}
-                    value={value}
-                    onChange={handleInputChange}
-                    className="form-input"
-                  />
-                </div>
-              ))}
-              <div className="form-actions">
-                <button className="cancel-btn" onClick={handleCancel}>
-                  Cancel
-                </button>
-                <button className="save-btn" onClick={handleSave}>
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="profile-details">
-              {Object.entries(profileData[activeSection]).map(
-                ([key, value]) => (
-                  <div key={key} className="profile-row">
-                    <span className="profile-label">{key}:</span>
-                    <span className="profile-value">
-                      {value || "Not specified"}
-                    </span>
-                  </div>
-                )
+  if (isLoading) {
+    return (
+      <div className="profile-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your profile...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="profile-container">
+      {/* Profile Header */}
+      <div className="profile-header">
+        <div className="avatar-wrapper">
+          <FaUserCircle className="profile-avatar" />
+          <button className="avatar-edit-button">
+            <FaEdit />
+          </button>
+        </div>
+        <div className="profile-info">
+          <h1 className="profile-name">
+            {profileData.personal.Name || "Your Profile"}
+          </h1>
+          <p className="profile-email">
+            {profileData.personal["Email ID"] || "No email provided"}
+          </p>
+          <div className="profile-meta">
+            {profileData.personal["Blood Group"] && (
+              <span className="meta-tag blood-group">
+                {profileData.personal["Blood Group"]}
+              </span>
+            )}
+            {profileData.personal.DOB &&
+              !isNaN(new Date(profileData.personal.DOB)) && (
+                <span className="meta-tag age">
+                  {new Date().getFullYear() -
+                    new Date(profileData.personal.DOB).getFullYear()}{" "}
+                  years
+                </span>
               )}
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
+      {/* Profile Navigation */}
+      <nav className="profile-nav">
+        {Object.keys(profileData).map((section) => (
+          <button
+            key={section}
+            className={`nav-button ${
+              activeSection === section ? "active" : ""
+            }`}
+            onClick={() => setActiveSection(section)}
+          >
+            {sectionIcons[section]}
+            {section.charAt(0).toUpperCase() + section.slice(1)}
+          </button>
+        ))}
+      </nav>
+
+      {/* Profile Content */}
+      <div className="profile-content">
+        <div className="section-header">
+          <h2 className="section-title">
+            {sectionIcons[activeSection]}
+            {activeSection.charAt(0).toUpperCase() +
+              activeSection.slice(1)}{" "}
+            Information
+          </h2>
+          {!isEditing && (
+            <button className="edit-button" onClick={handleEditClick}>
+              <FaEdit /> Edit Profile
+            </button>
+          )}
+        </div>
+
+        {isEditing ? (
+          <form className="edit-form">
+            <div className="form-grid">
+              {Object.entries(formData).map(([name, value]) => {
+                const config = fieldConfig[activeSection][name];
+                return (
+                  <div key={name} className="form-item">
+                    {renderInputField(name, value, config)}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={handleCancel}
+              >
+                <FaTimes /> Cancel
+              </button>
+              <button
+                type="button"
+                className="save-button"
+                onClick={handleSave}
+              >
+                <FaSave /> Save Changes
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="profile-details">
+            {Object.entries(profileData[activeSection]).map(([name, value]) => (
+              <div key={name} className="detail-row">
+                <span className="detail-label">
+                  {fieldConfig[activeSection][name]?.icon}
+                  {name}:
+                </span>
+                <span className={`detail-value ${!value ? "empty-value" : ""}`}>
+                  {value || "Not specified"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Navigation */}
       <BottomNavigation />
 
+      {/* CSS Styles */}
       <style jsx="true">{`
-        /* Main Profile Container */
+        :root {
+          --primary-color: #5e0d97;
+          --primary-light: #9900ff;
+          --secondary-color: #6c757d;
+          --success-color: #28a745;
+          --danger-color: #dc3545;
+          --light-color: #f8f9fa;
+          --dark-color: #343a40;
+          --border-radius: 8px;
+          --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          --transition: all 0.3s ease;
+        }
+
         .profile-container {
-          max-width: 800px;
-          margin: 20px auto 100px;
-          padding: 20px;
+          max-width: 1000px;
+          margin: 2rem auto 6rem;
+          padding: 2rem;
           background: white;
-          border-radius: 15px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          border-radius: 16px;
+          box-shadow: var(--box-shadow);
+          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
 
         /* Profile Header */
         .profile-header {
           display: flex;
           align-items: center;
-          gap: 20px;
-          padding: 20px 0;
-          margin-bottom: 20px;
-          border-bottom: 1px solid #f0f0f0;
+          gap: 2rem;
+          padding-bottom: 2rem;
+          margin-bottom: 2rem;
+          border-bottom: 1px solid #eee;
         }
 
-        .avatar-container {
+        .avatar-wrapper {
           position: relative;
+          width: 120px;
+          height: 120px;
         }
 
-        .profile-icon {
-          color: #5e0d97;
-          transition: transform 0.3s ease;
+        .profile-avatar {
+          width: 100%;
+          height: 100%;
+          color: var(--primary-color);
+          transition: var(--transition);
         }
 
-        .edit-avatar-btn {
+        .avatar-edit-button {
           position: absolute;
-          bottom: 5px;
-          right: 5px;
-          background: #9900ff;
+          bottom: 0;
+          right: 0;
+          background: var(--primary-light);
           color: white;
           border: none;
           border-radius: 50%;
-          width: 32px;
-          height: 32px;
+          width: 36px;
+          height: 36px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: var(--transition);
         }
 
-        .edit-avatar-btn:hover {
-          background: #7b00cc;
+        .avatar-edit-button:hover {
+          background: var(--primary-color);
           transform: scale(1.1);
         }
 
@@ -227,214 +658,310 @@ const Profile = () => {
         }
 
         .profile-name {
-          font-size: 24px;
-          font-weight: bold;
-          color: #333;
-          margin: 0 0 5px;
+          font-size: 2rem;
+          font-weight: 700;
+          color: var(--dark-color);
+          margin: 0 0 0.5rem;
         }
 
         .profile-email {
-          font-size: 14px;
-          color: #666;
-          margin: 0 0 8px;
+          font-size: 1rem;
+          color: var(--secondary-color);
+          margin: 0 0 1rem;
         }
 
         .profile-meta {
-          font-size: 14px;
-          color: #9900ff;
-          background: #f0e5ff;
-          padding: 4px 10px;
-          border-radius: 20px;
-          display: inline-block;
+          display: flex;
+          gap: 0.5rem;
         }
 
-        /* Toggle Section */
-        .toggle-container {
+        .meta-tag {
+          font-size: 0.875rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 20px;
+          font-weight: 500;
+        }
+
+        .blood-group {
+          background: #f0e5ff;
+          color: var(--primary-light);
+        }
+
+        .age {
+          background: #e5f0ff;
+          color: #0d6efd;
+        }
+
+        /* Profile Navigation */
+        .profile-nav {
           display: flex;
           justify-content: center;
-          gap: 15px;
-          margin-bottom: 30px;
+          gap: 1rem;
+          margin-bottom: 2rem;
           flex-wrap: wrap;
         }
 
-        .toggle-btn {
+        .nav-button {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 12px 24px;
-          border: 2px solid #9900ff;
+          gap: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          border: 2px solid var(--primary-light);
           border-radius: 30px;
           background: transparent;
-          color: #9900ff;
+          color: var(--primary-light);
           cursor: pointer;
           font-weight: 600;
-          transition: all 0.3s;
+          transition: var(--transition);
         }
 
-        .toggle-btn.active {
-          background: #9900ff;
+        .nav-button.active {
+          background: var(--primary-light);
           color: white;
           box-shadow: 0 4px 15px rgba(153, 0, 255, 0.2);
         }
 
-        .toggle-btn:hover:not(.active) {
+        .nav-button:hover:not(.active) {
           background: rgba(153, 0, 255, 0.1);
         }
 
         .section-icon {
-          font-size: 18px;
+          font-size: 1.25rem;
         }
 
-        /* Profile Section */
-        .profile-section {
+        /* Profile Content */
+        .profile-content {
           background: linear-gradient(135deg, #ffffff, #f3f6ff);
-          border-radius: 12px;
-          padding: 20px;
-          margin-bottom: 20px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+          border-radius: var(--border-radius);
+          padding: 2rem;
+          margin-bottom: 2rem;
         }
 
         .section-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 20px;
-          padding-bottom: 10px;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1rem;
           border-bottom: 1px solid #eee;
         }
 
         .section-title {
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-size: 18px;
-          color: #5e0d97;
+          gap: 0.75rem;
+          font-size: 1.5rem;
+          color: var(--primary-color);
           margin: 0;
         }
 
-        .edit-btn {
+        .edit-button {
           display: flex;
           align-items: center;
-          gap: 6px;
-          background: #9900ff;
+          gap: 0.5rem;
+          background: var(--primary-light);
           color: white;
           border: none;
-          border-radius: 20px;
-          padding: 8px 16px;
-          font-size: 14px;
+          border-radius: 30px;
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
           cursor: pointer;
-          transition: all 0.3s;
+          transition: var(--transition);
         }
 
-        .edit-btn:hover {
-          background: #7b00cc;
+        .edit-button:hover {
+          background: var(--primary-color);
           transform: translateY(-2px);
         }
 
         /* Profile Details */
         .profile-details {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 15px;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 1.5rem;
+
+          justify-content: center;
         }
 
-        .profile-row {
+        .detail-row {
           display: flex;
           justify-content: space-between;
-          padding: 12px 15px;
+          padding: 1rem;
           background: white;
-          border-radius: 8px;
+          border-radius: var(--border-radius);
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-          transition: all 0.3s;
+          transition: var(--transition);
         }
 
-        .profile-row:hover {
+        .detail-row:hover {
           transform: translateY(-3px);
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .profile-label {
+        .detail-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
           font-weight: 600;
-          color: #333;
+          color: var(--dark-color);
         }
 
-        .profile-value {
-          color: #555;
+        .detail-value {
+          color: var(--secondary-color);
           text-align: right;
+        }
+
+        .empty-value {
+          color: #999;
+          font-style: italic;
+        }
+
+        .field-icon {
+          color: var(--primary-light);
+          font-size: 1.1rem;
         }
 
         /* Edit Form */
         .edit-form {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 15px;
+          margin-top: 1.5rem;
         }
 
-        .form-group {
-          margin-bottom: 15px;
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .form-item {
+          margin-bottom: 1rem;
+        }
+
+        .form-field {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
         .form-label {
-          display: block;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
           font-weight: 600;
-          margin-bottom: 6px;
-          color: #333;
-          font-size: 14px;
+          color: var(--dark-color);
+          font-size: 0.95rem;
+        }
+
+        .required-asterisk {
+          color: var(--danger-color);
+          margin-left: 0.25rem;
         }
 
         .form-input {
           width: 100%;
-          padding: 10px 12px;
+          padding: 0.75rem 1rem;
           border: 1px solid #ddd;
-          border-radius: 8px;
-          font-size: 14px;
-          transition: all 0.3s;
+          border-radius: var(--border-radius);
+          font-size: 1rem;
+          transition: var(--transition);
         }
 
         .form-input:focus {
-          border-color: #9900ff;
+          border-color: var(--primary-light);
           box-shadow: 0 0 0 3px rgba(153, 0, 255, 0.1);
           outline: none;
         }
 
+        textarea.form-input {
+          min-height: 100px;
+          resize: vertical;
+        }
+
+        .input-with-suffix {
+          position: relative;
+        }
+
+        .input-suffix {
+          position: absolute;
+          right: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--secondary-color);
+          font-size: 0.9rem;
+        }
+
         .form-actions {
-          grid-column: 1 / -1;
           display: flex;
           justify-content: flex-end;
-          gap: 15px;
-          margin-top: 20px;
-          padding-top: 20px;
+          gap: 1rem;
+          margin-top: 2rem;
+          padding-top: 2rem;
           border-top: 1px solid #eee;
         }
 
-        .save-btn {
-          background: #5e0d97;
+        .save-button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: var(--success-color);
           color: white;
           border: none;
-          border-radius: 8px;
-          padding: 10px 20px;
+          border-radius: var(--border-radius);
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
           cursor: pointer;
-          transition: all 0.3s;
+          transition: var(--transition);
         }
 
-        .save-btn:hover {
-          background: #7a24b8;
+        .save-button:hover {
+          background: #218838;
           transform: translateY(-2px);
         }
 
-        .cancel-btn {
-          background: #f0f0f0;
-          color: #666;
+        .cancel-button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: var(--light-color);
+          color: var(--secondary-color);
           border: none;
-          border-radius: 8px;
-          padding: 10px 20px;
+          border-radius: var(--border-radius);
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
           cursor: pointer;
-          transition: all 0.3s;
+          transition: var(--transition);
         }
 
-        .cancel-btn:hover {
-          background: #e0e0e0;
+        .cancel-button:hover {
+          background: #e2e6ea;
           transform: translateY(-2px);
+        }
+
+        /* Loading State */
+        .profile-loading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 300px;
+          gap: 1rem;
+        }
+
+        .loading-spinner {
+          width: 50px;
+          height: 50px;
+          border: 5px solid #f3f3f3;
+          border-top: 5px solid var(--primary-light);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
 
         /* Responsive Styles */
@@ -444,38 +971,58 @@ const Profile = () => {
             text-align: center;
           }
 
-          .profile-details,
-          .edit-form {
-            grid-template-columns: 1fr;
+          .avatar-wrapper {
+            margin: 0 auto 1rem;
           }
 
-          .toggle-container {
+          .profile-meta {
+            justify-content: center;
+          }
+
+          .profile-nav {
             flex-direction: column;
             align-items: stretch;
           }
 
-          .toggle-btn {
+          .nav-button {
+            justify-content: center;
+          }
+
+          .profile-details,
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .section-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+          }
+
+          .edit-button {
+            width: 100%;
             justify-content: center;
           }
         }
 
         @media (max-width: 480px) {
           .profile-container {
-            padding: 15px;
-            margin: 10px auto 80px;
+            padding: 1rem;
+            margin: 1rem auto 5rem;
           }
 
           .form-actions {
             flex-direction: column;
           }
 
-          .save-btn,
-          .cancel-btn {
+          .save-button,
+          .cancel-button {
             width: 100%;
+            justify-content: center;
           }
         }
       `}</style>
-    </>
+    </div>
   );
 };
 
