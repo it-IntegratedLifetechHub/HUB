@@ -31,6 +31,11 @@ import HubDashboard from "./pages/Hub/Dashboard";
 import HubOrders from "./pages/Hub/Orders";
 import HubAssignment from "./pages/Hub/Assignment";
 import HubTrack from "./pages/Hub/Track";
+import Book from "./pages/Patient/Book";
+import Payment from "./components/Payement";
+import Services from "./pages/Hub/Services";
+import AddCategory from "./pages/Hub/AddCategory";
+import AddTest from "./pages/Hub/AddTest";
 
 const RefreshHandler = ({ setIsAuthenticated }) => {
   const location = useLocation();
@@ -111,6 +116,24 @@ const App = () => {
           }
         />
         <Route
+          path="/booking"
+          element={
+            <PatientRoute
+              element={<Book />}
+              isAuthenticated={isAuthenticated}
+            />
+          }
+        />
+        <Route
+          path="/payment"
+          element={
+            <PatientRoute
+              element={<Payment />}
+              isAuthenticated={isAuthenticated}
+            />
+          }
+        />
+        <Route
           path="/orders"
           element={
             <PatientRoute
@@ -146,10 +169,15 @@ const App = () => {
         <Route path="/lab/test" element={<LabTest />} />
         <Route path="/lab/report" element={<LabReport />} />
         <Route path="/lab/profile" element={<LabProfile />} />
+
         <Route path="/hub/dashboard" element={<HubDashboard />} />
         <Route path="/hub/orders" element={<HubOrders />} />
         <Route path="/hub/assignment" element={<HubAssignment />} />
         <Route path="/hub/track" element={<HubTrack />} />
+
+        <Route path="/hub/services" element={<Services />} />
+        <Route path="/hub/addcat" element={<AddCategory />} />
+        <Route path="/hub/addtest/:categoryId" element={<AddTest />} />
 
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/patient" replace />} />
