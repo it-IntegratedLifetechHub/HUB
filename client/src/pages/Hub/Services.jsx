@@ -7,13 +7,15 @@ import * as MdIcons from "react-icons/md";
 import * as RiIcons from "react-icons/ri";
 import * as FiIcons from "react-icons/fi";
 import * as AiIcons from "react-icons/ai";
+import { IoMdTime } from "react-icons/io";
+import { FaRupeeSign } from "react-icons/fa";
+import { AiOutlineDelete } from "react-icons/ai";
 
 const Service = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeDropdown, setActiveDropdown] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
   const [pagination, setPagination] = useState({
@@ -34,7 +36,7 @@ const Service = () => {
     ...AiIcons,
   };
 
-  // Modern color palette with CSS variables
+  // CSS variables for styling
   const cssVariables = {
     "--primary": "#6a0dad",
     "--primary-light": "#9c4dff",
@@ -42,7 +44,6 @@ const Service = () => {
     "--primary-dark": "#4a0072",
     "--secondary": "#f3e5ff",
     "--accent": "#ff6f00",
-    "--accent-light": "#ff9e40",
     "--text": "#2d3748",
     "--text-light": "#718096",
     "--light": "#ffffff",
@@ -51,14 +52,6 @@ const Service = () => {
     "--border": "#e2d8ee",
     "--error": "#e53e3e",
     "--success": "#38a169",
-    "--warning": "#dd6b20",
-    "--shadow-sm": "0 1px 3px rgba(0,0,0,0.12)",
-    "--shadow-md": "0 4px 6px rgba(0,0,0,0.1)",
-    "--shadow-lg": "0 10px 15px rgba(0,0,0,0.1)",
-    "--radius-sm": "4px",
-    "--radius-md": "8px",
-    "--radius-lg": "12px",
-    "--transition": "all 0.2s ease-in-out",
   };
 
   useEffect(() => {
@@ -73,7 +66,7 @@ const Service = () => {
         const params = new URLSearchParams({
           page: pagination.page,
           limit: pagination.limit,
-          ...(searchTerm && { search: searchTerm }),
+          ...(searchTerm && { name: searchTerm }),
         });
 
         const response = await fetch(
@@ -103,25 +96,20 @@ const Service = () => {
         setError(
           err.message || "Failed to load categories. Please try again later."
         );
+        setCategories([]);
       } finally {
         setLoading(false);
       }
     };
 
-    const debounceTimer = setTimeout(() => {
-      fetchCategories();
-    }, 300);
-
+    const debounceTimer = setTimeout(fetchCategories, 300);
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm, pagination.page]);
+  }, [searchTerm, pagination.page, pagination.limit]);
 
   const handleAddCategory = () => navigate("/hub/addcat");
-  const handleEditCategory = (id) => navigate(`/hub/categories/${id}/edit`);
   const handleAddTest = (categoryId) => navigate(`/hub/addtest/${categoryId}`);
   const handleEditTest = (categoryId, testId) =>
     navigate(`/hub/categories/${categoryId}/tests/${testId}/edit`);
-  const toggleDropdown = (id) =>
-    setActiveDropdown(activeDropdown === id ? null : id);
 
   const handleDeleteCategory = async (id) => {
     if (
@@ -143,7 +131,6 @@ const Service = () => {
       }
 
       setCategories((prev) => prev.filter((cat) => cat._id !== id));
-      // Show success feedback
       setError({ type: "success", message: "Category deleted successfully" });
       setTimeout(() => setError(null), 3000);
     } catch (err) {
@@ -170,14 +157,10 @@ const Service = () => {
       setCategories((prev) =>
         prev.map((cat) =>
           cat._id === categoryId
-            ? {
-                ...cat,
-                tests: cat.tests.filter((test) => test._id !== testId),
-              }
+            ? { ...cat, tests: cat.tests.filter((test) => test._id !== testId) }
             : cat
         )
       );
-      // Show success feedback
       setError({ type: "success", message: "Test deleted successfully" });
       setTimeout(() => setError(null), 3000);
     } catch (err) {
@@ -194,32 +177,6 @@ const Service = () => {
       <div className="loading-state">
         <div className="spinner"></div>
         <p>Loading services...</p>
-        <style jsx>{`
-          .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 300px;
-            gap: 1rem;
-          }
-          .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid var(--primary-lighter);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-        `}</style>
       </div>
     );
   }
@@ -242,13 +199,7 @@ const Service = () => {
 
           <div className="header-actions">
             <div className="search-bar">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
                   stroke="var(--primary-light)"
@@ -266,23 +217,19 @@ const Service = () => {
               </svg>
               <input
                 type="text"
-                placeholder="Search categories or tests..."
+                placeholder="Search categories by name..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
+                disabled={loading}
               />
+              {loading && <div className="search-spinner">Loading...</div>}
             </div>
 
             <button className="primary-btn" onClick={handleAddCategory}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12 5V19"
                   stroke="currentColor"
@@ -305,7 +252,7 @@ const Service = () => {
       </header>
 
       {error && (
-        <div className={`alert alert-${error.type}`}>
+        <div className={`alert alert-${error.type || "error"}`}>
           <div className="alert-content">
             <svg viewBox="0 0 24 24" width="20" height="20">
               {error.type === "success" ? (
@@ -342,11 +289,8 @@ const Service = () => {
                   <div className="card-header">
                     <div className="category-info">
                       <div className="category-icon">
-                        <span className="icon">
-                          {allIcons[category.icon]
-                            ? React.createElement(allIcons[category.icon])
-                            : null}
-                        </span>
+                        {allIcons[category.icon] &&
+                          React.createElement(allIcons[category.icon])}
                       </div>
                       <div className="category-details">
                         <h3>{category.name}</h3>
@@ -355,8 +299,7 @@ const Service = () => {
                         </p>
                         <div className="category-meta">
                           <span className="test-count">
-                            {category.tests?.length || 0}{" "}
-                            {category.tests?.length === 1 ? "test" : "tests"}
+                            {category.tests?.length || 0} tests
                           </span>
                           {category.createdAt && (
                             <span className="created-date">
@@ -381,7 +324,6 @@ const Service = () => {
                           height="16"
                           viewBox="0 0 24 24"
                           fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
                         >
                           <path
                             d="M12 5V19"
@@ -405,42 +347,7 @@ const Service = () => {
                         onClick={() => handleDeleteCategory(category._id)}
                         title="Delete category"
                       >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M3 6H5H21"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M10 11V17"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M14 11V17"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                        <AiOutlineDelete />
                       </button>
                     </div>
                   </div>
@@ -452,60 +359,21 @@ const Service = () => {
                         {category.tests.map((test) => (
                           <li key={test._id} className="test-item">
                             <div className="test-info">
+                              <div className="category-icon">
+                                {allIcons[test.icon] &&
+                                  React.createElement(allIcons[test.icon])}
+                              </div>
                               <h5 className="test-name">{test.name}</h5>
                               <div className="test-meta">
                                 {test.turnaroundTime && (
                                   <span className="turnaround">
-                                    <svg
-                                      width="14"
-                                      height="14"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        d="M12 8V12L15 15"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
+                                    <IoMdTime className="turnaround" />
                                     {test.turnaroundTime}
                                   </span>
                                 )}
                                 {test.totalCost && (
                                   <span className="cost">
-                                    <svg
-                                      width="14"
-                                      height="14"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        d="M12 1V23"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
-                                    ${test.totalCost.toFixed(2)}
+                                    <FaRupeeSign /> ${test.totalCost.toFixed(2)}
                                   </span>
                                 )}
                               </div>
@@ -517,78 +385,13 @@ const Service = () => {
                             </div>
                             <div className="test-actions">
                               <button
-                                className="icon-btn primary"
-                                onClick={() =>
-                                  handleEditTest(category._id, test._id)
-                                }
-                                title="Edit test"
-                              >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </button>
-                              <button
                                 className="icon-btn danger"
                                 onClick={() =>
                                   handleDeleteTest(category._id, test._id)
                                 }
                                 title="Delete test"
                               >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M3 6H5H21"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M10 11V17"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M14 11V17"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
+                                <AiOutlineDelete />
                               </button>
                             </div>
                           </li>
@@ -596,19 +399,11 @@ const Service = () => {
                       </ul>
                     ) : (
                       <div className="empty-tests">
-                        <svg
-                          width="48"
-                          height="48"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
+                        <svg width="48" height="48" viewBox="0 0 24 24">
                           <path
                             d="M9 3V4M15 3V4M9 17V18M15 17V18M9 12V13M15 12V13M5 7H19C20.1046 7 21 7.89543 21 9V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V9C3 7.89543 3.89543 7 5 7Z"
                             stroke="var(--text-light)"
                             strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
                           />
                         </svg>
                         <p>No tests in this category</p>
@@ -661,21 +456,6 @@ const Service = () => {
                       );
                     }
                   )}
-                  {pagination.pages > 5 &&
-                    pagination.page < pagination.pages - 2 && (
-                      <span className="ellipsis">...</span>
-                    )}
-                  {pagination.pages > 5 &&
-                    pagination.page < pagination.pages - 2 && (
-                      <button
-                        className={`pagination-btn ${
-                          pagination.page === pagination.pages ? "active" : ""
-                        }`}
-                        onClick={() => handlePageChange(pagination.pages)}
-                      >
-                        {pagination.pages}
-                      </button>
-                    )}
                 </div>
                 <button
                   className="pagination-btn"
@@ -690,19 +470,11 @@ const Service = () => {
         ) : (
           <div className="empty-state">
             <div className="empty-content">
-              <svg
-                width="80"
-                height="80"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="80" height="80" viewBox="0 0 24 24">
                 <path
                   d="M8 3H6C4.89543 3 4 3.89543 4 5V7M8 3H16M8 3V1M16 3H18C19.1046 3 20 3.89543 20 5V7M16 3V1M4 7V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V7M4 7H20M12 12V15M12 15L15 12M12 15L9 12"
                   stroke="var(--primary-light)"
                   strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                 />
               </svg>
               <h3>No categories found</h3>
@@ -714,7 +486,6 @@ const Service = () => {
           </div>
         )}
       </main>
-
       <style jsx>{`
         .services-dashboard {
           min-height: 100vh;
@@ -1097,9 +868,17 @@ const Service = () => {
           align-items: center;
         }
 
+        .turnaround svg {
+          color: #6a0dad;
+        }
+
         .cost {
           display: inline-flex;
           align-items: center;
+        }
+
+        .cost svg {
+          color: #6a0dad;
         }
 
         .test-description {

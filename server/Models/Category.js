@@ -8,6 +8,12 @@ const testSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, "Test name cannot exceed 100 characters"],
     },
+    icon: {
+      type: String,
+      required: [true, "Icon is required"],
+      default: "fas fa-folder",
+      maxlength: [50, "Icon cannot exceed 50 characters"],
+    },
     description: {
       type: String,
       trim: true,
