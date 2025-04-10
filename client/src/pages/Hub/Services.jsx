@@ -373,7 +373,7 @@ const Service = () => {
                                 )}
                                 {test.totalCost && (
                                   <span className="cost">
-                                    <FaRupeeSign /> ${test.totalCost.toFixed(2)}
+                                    <FaRupeeSign /> {test.totalCost.toFixed(2)}
                                   </span>
                                 )}
                               </div>
