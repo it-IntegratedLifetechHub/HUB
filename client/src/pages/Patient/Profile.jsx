@@ -6,6 +6,7 @@ import {
   FaSave,
   FaTimes,
 } from "react-icons/fa";
+import { CiLogout } from "react-icons/ci";
 import { MdWorkOutline, MdEmergency } from "react-icons/md";
 import { IoMdFitness, IoMdMedical } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +25,43 @@ const Profile = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      // Call logout API
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Logout failed");
+      }
+
+      // Clear user data
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // Redirect to login
+      navigate("/patient/login", { replace: true });
+    } catch (error) {
+      console.error("Logout error:", error.message);
+      // Still clear local storage even if API fails
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/patient/login", { replace: true });
+    }
+  };
 
   // Enhanced field configuration with icons and validation
   const fieldConfig = {
@@ -499,6 +537,14 @@ const Profile = () => {
                 </span>
               )}
           </div>
+        </div>
+        <div className="profile-logout">
+          <button className="logout-btn" onClick={handleLogout}>
+            <span className="logout-icon">
+              <CiLogout />
+            </span>
+            <span className="logout-text">Logout</span>
+          </button>
         </div>
       </div>
 
@@ -1020,6 +1066,46 @@ const Profile = () => {
             width: 100%;
             justify-content: center;
           }
+        }
+        .profile-logout {
+          display: flex;
+          justify-content: flex-end;
+          padding: 1rem;
+        }
+
+        .logout-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background-color: #f44336;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+          background-color: #d32f2f;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .logout-btn:active {
+          transform: translateY(0);
+          box-shadow: none;
+        }
+
+        .logout-icon {
+          display: flex;
+          align-items: center;
+        }
+
+        .logout-text {
+          white-space: nowrap;
         }
       `}</style>
     </div>

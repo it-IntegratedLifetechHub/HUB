@@ -22,6 +22,21 @@ router.get("/protected", ensureAuthenticated, (req, res) => {
     user: req.user,
   });
 });
+// Logout route
+router.post('/api/logout', ensureAuthenticated, (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: 'Logout successful'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during logout'
+    });
+  }
+});
 
 // Enhanced GET patient profile endpoint
 router.get("/api/patient/me", ensureAuthenticated, async (req, res) => {
