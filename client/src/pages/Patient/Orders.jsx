@@ -157,22 +157,81 @@ const Orders = () => {
     <div className="orders-container">
       <h1 className="page-title">My Test Orders</h1>
 
-      {/* Toggle for Recent/Completed orders */}
-      <div className="orders-toggle">
-        <button
-          className={`toggle-button ${activeTab === "recent" ? "active" : ""}`}
-          onClick={() => setActiveTab("recent")}
-        >
-          Recent Orders
-        </button>
-        <button
-          className={`toggle-button ${
-            activeTab === "completed" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("completed")}
-        >
-          Completed Orders
-        </button>
+      {/* Enhanced Toggle for Recent/Completed orders */}
+      <div className="toggle-container">
+        <div className="toggle-wrapper">
+          <input
+            type="radio"
+            id="recent"
+            name="orderFilter"
+            checked={activeTab === "recent"}
+            onChange={() => setActiveTab("recent")}
+          />
+          <label
+            htmlFor="recent"
+            className={`toggle-option ${
+              activeTab === "recent" ? "active" : ""
+            }`}
+          >
+            <span className="toggle-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="toggle-label">Recent</span>
+            {activeTab === "recent" && <div className="active-indicator"></div>}
+          </label>
+
+          <input
+            type="radio"
+            id="completed"
+            name="orderFilter"
+            checked={activeTab === "completed"}
+            onChange={() => setActiveTab("completed")}
+          />
+          <label
+            htmlFor="completed"
+            className={`toggle-option ${
+              activeTab === "completed" ? "active" : ""
+            }`}
+          >
+            <span className="toggle-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="toggle-label">Completed</span>
+            {activeTab === "completed" && (
+              <div className="active-indicator"></div>
+            )}
+          </label>
+
+          <div className="toggle-bg"></div>
+        </div>
       </div>
 
       {filteredOrders.length === 0 ? (
@@ -401,7 +460,7 @@ const Orders = () => {
           --text-light: #718096;
           --border-radius: 12px;
           --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          --transition: all 0.3s ease;
+          --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Base Styles */
@@ -421,32 +480,87 @@ const Orders = () => {
           text-align: center;
         }
 
-        /* Orders Toggle */
-        .orders-toggle {
+        /* Enhanced Toggle Styles */
+        .toggle-container {
           display: flex;
-          margin: 0 auto 25px;
-          background: #f5f5f5;
-          border-radius: var(--border-radius);
-          padding: 5px;
-          max-width: 400px;
+          justify-content: center;
+          margin: 0 auto 30px;
+          position: relative;
         }
 
-        .toggle-button {
-          flex: 1;
-          padding: 10px 15px;
-          border: none;
-          background: transparent;
-          font-weight: 600;
-          color: var(--text-medium);
+        .toggle-wrapper {
+          display: flex;
+          position: relative;
+          background: #f8f5ff;
+          border-radius: 50px;
+          padding: 6px;
+          box-shadow: 0 2px 10px rgba(106, 13, 173, 0.1);
+          border: 1px solid rgba(106, 13, 173, 0.1);
+        }
+
+        .toggle-wrapper input[type="radio"] {
+          position: absolute;
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+
+        .toggle-option {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 12px 24px;
+          border-radius: 50px;
           cursor: pointer;
-          border-radius: 8px;
           transition: var(--transition);
+          z-index: 1;
+          min-width: 150px;
+          color: var(--text-medium);
+          font-weight: 600;
         }
 
-        .toggle-button.active {
-          background: white;
+        .toggle-option:hover {
           color: var(--primary-color);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-option.active {
+          color: white;
+        }
+
+        .toggle-icon {
+          margin-right: 8px;
+          display: flex;
+          align-items: center;
+        }
+
+        .toggle-option.active .toggle-icon {
+          color: white;
+        }
+
+        .toggle-bg {
+          position: absolute;
+          top: 6px;
+          left: 6px;
+          height: calc(100% - 12px);
+          width: calc(50% - 6px);
+          background: var(--primary-color);
+          border-radius: 50px;
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transform: translateX(${activeTab === "recent" ? "0" : "100%"});
+          box-shadow: 0 4px 6px rgba(106, 13, 173, 0.2);
+        }
+
+        .active-indicator {
+          position: absolute;
+          bottom: -8px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 20px;
+          height: 3px;
+          background: white;
+          border-radius: 3px;
+          opacity: 0.8;
         }
 
         /* Empty State */
@@ -488,6 +602,8 @@ const Orders = () => {
 
         .primary-button:hover {
           background-color: var(--secondary-color);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(106, 13, 173, 0.3);
         }
 
         /* Order List */
@@ -840,6 +956,16 @@ const Orders = () => {
           .action-buttons {
             flex-direction: column;
           }
+
+          .toggle-option {
+            min-width: 120px;
+            padding: 10px 16px;
+            font-size: 14px;
+          }
+
+          .toggle-icon {
+            margin-right: 6px;
+          }
         }
 
         @media (max-width: 480px) {
@@ -863,13 +989,18 @@ const Orders = () => {
             grid-template-columns: 1fr;
           }
 
-          .orders-toggle {
-            flex-direction: column;
-            max-width: 100%;
+          .toggle-wrapper {
+            width: 100%;
           }
 
-          .toggle-button {
-            width: 100%;
+          .toggle-option {
+            flex: 1;
+            min-width: auto;
+            padding: 10px 12px;
+          }
+
+          .toggle-icon {
+            display: none;
           }
         }
       `}</style>
