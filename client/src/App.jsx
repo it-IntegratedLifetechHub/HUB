@@ -98,7 +98,7 @@ const App = () => {
           }
         />
         <Route
-          path="/service/:serviceName"
+          path="/category/:categoryId"
           element={
             <PatientRoute
               element={<SingleService />}
@@ -107,7 +107,7 @@ const App = () => {
           }
         />
         <Route
-          path="/service/:serviceName/:test"
+          path="/category/:categoryId/test/:test"
           element={
             <PatientRoute
               element={<SingleTest />}

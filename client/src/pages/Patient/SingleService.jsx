@@ -17,7 +17,8 @@ import {
   FaRegBookmark,
   FaArrowLeft,
 } from "react-icons/fa";
-import testData from "../../test.json";
+import { FaRupeeSign } from "react-icons/fa";
+
 import BottomNavigation from "../../components/BottomNav";
 
 const SingleService = () => {
@@ -40,9 +41,12 @@ const SingleService = () => {
     }
     return FaFlask;
   }
-  const { serviceName } = useParams();
-  const decodedServiceName = decodeURIComponent(serviceName);
-  const service = testData.tests[decodedServiceName];
+
+  const { categoryId } = useParams();
+  const [category, setCategory] = useState(null);
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [savedTests, setSavedTests] = useState([]);
 
   useEffect(() => {
@@ -50,7 +54,40 @@ const SingleService = () => {
     // Load saved tests from localStorage
     const saved = JSON.parse(localStorage.getItem("savedTests")) || [];
     setSavedTests(saved);
-  }, []);
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch category details
+        const categoryResponse = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/categories/${categoryId}`
+        );
+        if (!categoryResponse.ok) {
+          throw new Error("Category not found");
+        }
+        const categoryData = await categoryResponse.json();
+        setCategory(categoryData.data);
+
+        // Fetch tests for the category
+        const testsResponse = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/categories/${categoryId}/tests`
+        );
+        if (!testsResponse.ok) {
+          throw new Error("Failed to fetch tests");
+        }
+        const testsData = await testsResponse.json();
+        setTests(testsData.data);
+
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [categoryId]);
 
   const toggleSaveTest = (testName) => {
     const newSavedTests = savedTests.includes(testName)
@@ -60,7 +97,30 @@ const SingleService = () => {
     localStorage.setItem("savedTests", JSON.stringify(newSavedTests));
   };
 
-  if (!service) {
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading service details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="not-found-container">
+        <div className="not-found-message">
+          <h2>Error Loading Service</h2>
+          <p>{error}</p>
+          <Link to="/" className="back-button">
+            <FaArrowLeft /> Back to Services
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!category) {
     return (
       <div className="not-found-container">
         <div className="not-found-message">
@@ -82,79 +142,82 @@ const SingleService = () => {
       <div className="service-header">
         <div className="header-content">
           <div className="service-icon">
-            <FaFlask size={50} />
+            {React.createElement(getIconComponent(category.icon), { size: 50 })}
           </div>
-          <h1>{decodedServiceName}</h1>
+
+          <h1>{category.name}</h1>
           <p className="service-description">
-            {service.description || "Explore recommended tests below"}
+            {category.description || "Explore recommended tests below"}
           </p>
         </div>
       </div>
 
       <div className="test-grid">
-        {service.tests.map((testGroup, index) =>
-          Object.keys(testGroup).map((testName, idx) => {
-            const testDetails = testGroup[testName];
-            const isSaved = savedTests.includes(testName);
+        {tests.map((test, index) => {
+          const isSaved = savedTests.includes(test.name);
 
-            return (
-              <div key={`${index}-${idx}`} className="test-card">
-                <div className="card-header">
-                  <div className="test-icon">
-                    {React.createElement(getIconComponent(testDetails.icon), {
-                      size: 30,
-                    })}
-                  </div>
-                  <button
-                    className={`save-button ${isSaved ? "saved" : ""}`}
-                    onClick={() => toggleSaveTest(testName)}
-                    aria-label={isSaved ? "Unsave test" : "Save test"}
-                  >
-                    {isSaved ? <FaBookmark /> : <FaRegBookmark />}
-                  </button>
+          return (
+            <div key={index} className="test-card">
+              <div className="card-header">
+                <div className="test-icon">
+                  {React.createElement(getIconComponent(test.icon), {
+                    size: 30,
+                  })}
                 </div>
+                <button
+                  className={`save-button ${isSaved ? "saved" : ""}`}
+                  onClick={() => toggleSaveTest(test.name)}
+                  aria-label={isSaved ? "Unsave test" : "Save test"}
+                >
+                  {isSaved ? <FaBookmark /> : <FaRegBookmark />}
+                </button>
+              </div>
 
-                <div className="card-body">
-                  <h2 className="test-title">{testName}</h2>
-                  <p className="test-description">{testDetails.description}</p>
+              <div className="card-body">
+                <h2 className="test-title">{test.name}</h2>
+                <p className="test-description">{test.description}</p>
 
-                  <div className="test-details">
-                    <div className="detail-item">
-                      <FaClock className="detail-icon" />
-                      <span>
-                        Duration: {testDetails.duration || "15-30 mins"}
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <FaUserMd className="detail-icon" />
-                      <span>
-                        Specialist: {testDetails.specialist || "Pathologist"}
-                      </span>
-                    </div>
-                    {testDetails.preparation && (
-                      <div className="detail-item">
-                        <FaInfoCircle className="detail-icon" />
-                        <span>Preparation: {testDetails.preparation}</span>
-                      </div>
-                    )}
+                <div className="test-details">
+                  <div className="detail-item">
+                    <FaClock className="detail-icon" />
+                    <span>
+                      Turn Around Time: {test.turnaroundTime || "15-30 mins"}
+                    </span>
                   </div>
-                </div>
-
-                <div className="card-footer">
-                  <Link
-                    to={`/service/${encodeURIComponent(
-                      decodedServiceName
-                    )}/${encodeURIComponent(testName)}`}
-                    className="detail-button"
-                  >
-                    View Details
-                  </Link>
-                  <button className="book-button">Book Now</button>
+                  <div className="detail-item">
+                    <FaUserMd className="detail-icon" />
+                    <span>Specialist: {test.specialist || "Pathologist"}</span>
+                  </div>
+                  {test.preparation && (
+                    <div className="detail-item">
+                      <FaInfoCircle className="detail-icon" />
+                      <span>Preparation: {test.preparation}</span>
+                    </div>
+                  )}
+                  <div className="detail-item total-cost">
+                    <FaRupeeSign className="detail-icon" />
+                    <span className="cost-value">
+                      {test.totalCost.toLocaleString("en-IN")}
+                    </span>
+                    <span className="cost-label">Total Cost</span>
+                  </div>
                 </div>
               </div>
-            );
-          })
-        )}
+
+              <div className="card-footer">
+                <Link
+                  to={`/category/${categoryId}/test/${encodeURIComponent(
+                    test.name
+                  )}`}
+                  className="detail-button"
+                >
+                  View Details
+                </Link>
+                <button className="book-button">Book Now</button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <BottomNavigation />
@@ -179,7 +242,7 @@ const SingleService = () => {
           margin: 0 auto;
           padding: 20px;
           padding-bottom: 100px;
-    font-family: "Outfit", sans-serif;
+          font-family: "Outfit", sans-serif;
         }
 
         /* Not Found State */
@@ -354,6 +417,7 @@ const SingleService = () => {
           font-size: 20px;
           color: var(--text-dark);
           margin: 0 0 10px 0;
+          font-weight: 600;
         }
 
         .test-description {
@@ -366,7 +430,7 @@ const SingleService = () => {
         .test-details {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
           margin-top: 20px;
         }
 
@@ -378,29 +442,56 @@ const SingleService = () => {
           color: var(--text-medium);
         }
 
+        .detail-item.total-cost {
+          margin-top: 15px;
+          padding-top: 15px;
+          border-top: 1px dashed #eee;
+          align-items: baseline;
+        }
+
         .detail-icon {
           color: var(--primary-color);
           flex-shrink: 0;
+          font-size: 16px;
         }
 
+        .cost-value {
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--primary-color);
+        }
+
+        .cost-label {
+          margin-left: auto;
+          font-size: 13px;
+          color: var(--text-light);
+          background: #f5f5f5;
+          padding: 4px 8px;
+          border-radius: 4px;
+        }
+
+        /* Card Footer (if needed) */
         .card-footer {
           display: flex;
           border-top: 1px solid #eee;
           padding: 15px 20px;
+          gap: 10px;
         }
 
-        .detail-button {
+        .detail-button,
+        .book-button {
           flex: 1;
           padding: 10px;
-          background: white;
-          color: var(--primary-color);
-          border: 1px solid var(--primary-color);
           border-radius: 8px;
           font-weight: 600;
           text-align: center;
-          text-decoration: none;
           transition: var(--transition);
-          margin-right: 10px;
+        }
+
+        .detail-button {
+          background: white;
+          color: var(--primary-color);
+          border: 1px solid var(--primary-color);
         }
 
         .detail-button:hover {
@@ -408,21 +499,15 @@ const SingleService = () => {
         }
 
         .book-button {
-          flex: 1;
-          padding: 10px;
           background: var(--primary-color);
           color: white;
           border: none;
-          border-radius: 8px;
-          font-weight: 600;
           cursor: pointer;
-          transition: var(--transition);
         }
 
         .book-button:hover {
           background: var(--secondary-color);
         }
-
         /* Responsive Design */
         @media (max-width: 768px) {
           .service-header h1 {

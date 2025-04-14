@@ -23,17 +23,17 @@ router.get("/protected", ensureAuthenticated, (req, res) => {
   });
 });
 // Logout route
-router.post('/api/logout', ensureAuthenticated, (req, res) => {
+router.post("/api/logout", ensureAuthenticated, (req, res) => {
   try {
     res.status(200).json({
       success: true,
-      message: 'Logout successful'
+      message: "Logout successful",
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error during logout'
+      message: "Server error during logout",
     });
   }
 });
@@ -404,7 +404,6 @@ router.post(
     }
   }
 );
-// DELETE - Remove test from a category
 // DELETE - Remove test from category
 router.delete("/api/categories/:categoryId/tests/:testId", async (req, res) => {
   try {
