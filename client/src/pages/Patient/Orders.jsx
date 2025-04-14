@@ -54,9 +54,26 @@ const Orders = () => {
         risks: "Minimal",
       },
     },
+    {
+      id: 3,
+      testName: "Lipid Profile",
+      bookedDate: "12 January 2025",
+      status: "pending",
+      estimatedCompletion: "15 January 2025",
+      collectionType: "Home Collection",
+      collectionTime: "2:00 PM - 4:00 PM",
+      notes: "12-hour fasting required",
+      reportUrl: "#",
+      testDetails: {
+        preparation: "12-hour fasting",
+        duration: "5 minutes",
+        risks: "Minimal",
+      },
+    },
   ]);
 
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [activeTab, setActiveTab] = useState("recent"); // 'recent' or 'completed'
 
   const toggleOrderDetails = (orderId) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
@@ -127,24 +144,66 @@ const Orders = () => {
     console.log("Contacting support");
   };
 
+  // Filter orders based on active tab
+  const filteredOrders = orders.filter((order) => {
+    if (activeTab === "completed") {
+      return order.status === "completed";
+    } else {
+      return order.status !== "completed";
+    }
+  });
+
   return (
     <div className="orders-container">
       <h1 className="page-title">My Test Orders</h1>
 
-      {orders.length === 0 ? (
+      {/* Toggle for Recent/Completed orders */}
+      <div className="orders-toggle">
+        <button
+          className={`toggle-button ${activeTab === "recent" ? "active" : ""}`}
+          onClick={() => setActiveTab("recent")}
+        >
+          Recent Orders
+        </button>
+        <button
+          className={`toggle-button ${
+            activeTab === "completed" ? "active" : ""
+          }`}
+          onClick={() => setActiveTab("completed")}
+        >
+          Completed Orders
+        </button>
+      </div>
+
+      {filteredOrders.length === 0 ? (
         <div className="empty-state">
           <img
             src="/images/no-orders.svg"
             alt="No orders"
             className="empty-image"
           />
-          <h3>No Test Orders Found</h3>
-          <p>You haven't booked any medical tests yet.</p>
-          <button className="primary-button">Book a Test Now</button>
+          <h3>
+            {activeTab === "completed"
+              ? "No Completed Orders Found"
+              : "No Recent Orders Found"}
+          </h3>
+          <p>
+            {activeTab === "completed"
+              ? "You don't have any completed test orders yet."
+              : "You don't have any recent test orders."}
+          </p>
+          {activeTab === "completed" && (
+            <button
+              className="primary-button"
+              onClick={() => setActiveTab("recent")}
+            >
+              View Recent Orders
+            </button>
+          )}
         </div>
       ) : (
         <div className="orders-list">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <div key={order.id} className={`order-card ${order.status}`}>
               <div className="card-header">
                 <div className="test-info">
@@ -351,7 +410,7 @@ const Orders = () => {
           margin: 0 auto;
           padding: 20px;
           padding-bottom: 100px;
-    font-family: "Outfit", sans-serif;
+          font-family: "Outfit", sans-serif;
         }
 
         .page-title {
@@ -360,6 +419,34 @@ const Orders = () => {
           margin-bottom: 25px;
           color: var(--primary-color);
           text-align: center;
+        }
+
+        /* Orders Toggle */
+        .orders-toggle {
+          display: flex;
+          margin: 0 auto 25px;
+          background: #f5f5f5;
+          border-radius: var(--border-radius);
+          padding: 5px;
+          max-width: 400px;
+        }
+
+        .toggle-button {
+          flex: 1;
+          padding: 10px 15px;
+          border: none;
+          background: transparent;
+          font-weight: 600;
+          color: var(--text-medium);
+          cursor: pointer;
+          border-radius: 8px;
+          transition: var(--transition);
+        }
+
+        .toggle-button.active {
+          background: white;
+          color: var(--primary-color);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         /* Empty State */
@@ -774,6 +861,15 @@ const Orders = () => {
 
           .details-grid {
             grid-template-columns: 1fr;
+          }
+
+          .orders-toggle {
+            flex-direction: column;
+            max-width: 100%;
+          }
+
+          .toggle-button {
+            width: 100%;
           }
         }
       `}</style>
