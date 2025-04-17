@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import BottomNavigation from "../../components/BottomNav";
+import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaEnvelope,
@@ -12,9 +12,32 @@ import {
   FaArrowRight,
   FaCheckCircle,
   FaShieldAlt,
+  FaRupeeSign,
+  FaFlask,
+  FaInfoCircle,
 } from "react-icons/fa";
+import BottomNavigation from "../../components/BottomNav";
 
 const Book = () => {
+  const { categoryId, test: testNameParam } = useParams();
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const decodedTestName = decodeURIComponent(testNameParam);
+
+  // Get test details from location state or initialize empty
+  const [testDetails, setTestDetails] = useState(
+    state?.testDetails || {
+      name: decodedTestName,
+      categoryId,
+      totalCost: 0,
+      description: "",
+      preparation: "",
+      turnaroundTime: "",
+      specialist: "",
+      whyToTake: "",
+    }
+  );
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -32,6 +55,54 @@ const Book = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
+  // If test details weren't passed in state, fetch them
+  useEffect(() => {
+    if (!state?.testDetails) {
+      const fetchTestDetails = async () => {
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/categories/${categoryId}/tests`
+          );
+          if (!res.ok) throw new Error("Failed to fetch test details");
+
+          const data = await res.json();
+          const foundTest = data.data.find((t) => t.name === decodedTestName);
+
+          if (!foundTest) throw new Error("Test not found");
+
+          setTestDetails(foundTest);
+        } catch (err) {
+          console.error("Error fetching test details:", err);
+        }
+      };
+
+      fetchTestDetails();
+    }
+  }, [categoryId, decodedTestName, state]);
+
+  const validateForm = () => {
+    const errors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{10,15}$/;
+
+    if (!formData.fullName.trim()) errors.fullName = "Full name is required";
+    if (!emailRegex.test(formData.email))
+      errors.email = "Invalid email address";
+    if (!phoneRegex.test(formData.phone)) errors.phone = "Invalid phone number";
+    if (!formData.gender) errors.gender = "Please select a gender";
+    if (!formData.preferredDate) errors.preferredDate = "Date is required";
+    if (!formData.preferredTime) errors.preferredTime = "Time slot is required";
+    if (!formData.street.trim()) errors.street = "Street address is required";
+    if (!formData.city.trim()) errors.city = "City is required";
+    if (!formData.state.trim()) errors.state = "State is required";
+    if (!formData.zip.trim()) errors.zip = "ZIP code is required";
+    if (!formData.country) errors.country = "Country is required";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,45 +110,78 @@ const Book = () => {
       ...prev,
       [name]: value,
     }));
+
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Actual API call would go here
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/bookings`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            testId: testDetails._id,
+            testName: testDetails.name,
+            categoryId,
+            price: testDetails.totalCost,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Booking failed");
+
       setIsSuccess(true);
 
-      // Reset form after showing success
+      // Reset form after 3 seconds
       setTimeout(() => {
         setIsSuccess(false);
-        setFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          gender: "",
-          street: "",
-          city: "",
-          state: "",
-          zip: "",
-          country: "",
-          notes: "",
-          preferredDate: "",
-          preferredTime: "",
-        });
+        navigate("/appointments"); // Redirect to appointments page
       }, 3000);
-    }, 1500);
+    } catch (err) {
+      console.error("Booking error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // Calculate tomorrow's date for min date
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().split("T")[0];
+
+  // Available time slots
+  const timeSlots = [
+    { value: "08:00-10:00", label: "Morning (08:00-10:00)" },
+    { value: "10:00-12:00", label: "Late Morning (10:00-12:00)" },
+    { value: "12:00-14:00", label: "Afternoon (12:00-14:00)" },
+    { value: "14:00-16:00", label: "Early Evening (14:00-16:00)" },
+  ];
 
   return (
     <div className="book-container">
       {/* Header with gradient background */}
       <div className="book-header">
         <div className="header-content">
-          <h1>Book Your Health Screening</h1>
-          <p>Secure your appointment quickly and conveniently</p>
+          <h1>Book Your Test</h1>
+          <p>Complete your booking in just a few steps</p>
           <div className="header-badges">
             <span className="badge">
               <FaShieldAlt /> Secure Booking
@@ -85,10 +189,10 @@ const Book = () => {
             <span className="badge">
               <FaUserMd /> Certified Specialists
             </span>
+            <span className="badge">
+              <FaClock /> Quick Results
+            </span>
           </div>
-        </div>
-        <div className="header-illustration">
-          <div className="doctor-icon">👨‍⚕️</div>
         </div>
       </div>
 
@@ -105,75 +209,79 @@ const Book = () => {
       <div className="book-content">
         {/* Test Information Card */}
         <div className="test-info-card">
-          <div className="test-badge">Most Popular</div>
+          <div className="test-badge">Popular Test</div>
           <div className="test-header">
             <h2>
-              <span className="test-icon">🩺</span>
-              Hepatitis B & C Screening
+              <span className="test-icon">
+                <FaFlask />
+              </span>
+              {testDetails.name}
             </h2>
-            <div className="test-rating">
-              <span className="stars">★★★★★</span>
-              <span className="review-count">128 reviews</span>
-            </div>
-          </div>
-          <p className="test-description">
-            Comprehensive screening to detect hepatitis B surface antigens and
-            hepatitis C antibodies in your blood, identifying potential
-            infection or exposure. Early detection leads to better outcomes.
-          </p>
+            <p className="test-description">
+              {testDetails.description || "Comprehensive health screening"}
+            </p>
 
-          <div className="test-details-grid">
-            <div className="detail-card">
-              <div className="detail-icon-container">
-                <FaClock className="detail-icon" />
+            <div className="test-details-grid">
+              <div className="detail-card">
+                <div className="detail-icon-container">
+                  <FaClock className="detail-icon" />
+                </div>
+                <div>
+                  <span className="detail-label">Duration</span>
+                  <span className="detail-value">
+                    {testDetails.turnaroundTime || "15-30 minutes"}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="detail-label">Duration</span>
-                <span className="detail-value">15-30 minutes</span>
+              <div className="detail-card">
+                <div className="detail-icon-container">
+                  <FaUserMd className="detail-icon" />
+                </div>
+                <div>
+                  <span className="detail-label">Specialist</span>
+                  <span className="detail-value">
+                    {testDetails.specialist || "Certified Professional"}
+                  </span>
+                </div>
+              </div>
+              <div className="detail-card">
+                <div className="detail-icon-container">
+                  <FaNotesMedical className="detail-icon" />
+                </div>
+                <div>
+                  <span className="detail-label">Preparation</span>
+                  <span className="detail-value">
+                    {testDetails.preparation || "No special preparation needed"}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="detail-card">
-              <div className="detail-icon-container">
-                <FaUserMd className="detail-icon" />
+
+            {testDetails.whyToTake && (
+              <div className="test-benefits">
+                <h4>Why Take This Test?</h4>
+                <p>{testDetails.whyToTake}</p>
               </div>
-              <div>
-                <span className="detail-label">Specialist</span>
-                <span className="detail-value">Certified Pathologist</span>
-              </div>
-            </div>
-            <div className="detail-card">
-              <div className="detail-icon-container">
-                <FaNotesMedical className="detail-icon" />
-              </div>
-              <div>
-                <span className="detail-label">Preparation</span>
-                <span className="detail-value">
-                  No fasting required. Standard blood draw.
+            )}
+
+            <div className="test-footer">
+              <div className="test-price">
+                <span className="price-label">Total Cost:</span>
+                <span className="price-value">
+                  <FaRupeeSign />{" "}
+                  {testDetails.totalCost.toLocaleString("en-IN")}
                 </span>
               </div>
-            </div>
-          </div>
-
-          <div className="test-benefits">
-            <h4>This test includes:</h4>
-            <ul>
-              <li>Hepatitis B Surface Antigen Test</li>
-              <li>Hepatitis C Antibody Test</li>
-              <li>Doctor's consultation</li>
-              <li>Digital results within 24-48 hours</li>
-            </ul>
-          </div>
-
-          <div className="test-footer">
-            <div className="test-price">
-              <span className="price-label">Total Cost:</span>
-              <span className="price-value">$135.00</span>
+              <div className="test-availability">
+                <FaCheckCircle className="availability-icon" />
+                <span>Available at all locations</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Booking Form Section */}
-        <form className="booking-form" onSubmit={handleSubmit}>
+        <form className="booking-form" onSubmit={handleSubmit} noValidate>
           <h2>
             <FaUser className="section-icon" /> Patient Information
           </h2>
@@ -190,7 +298,13 @@ const Book = () => {
               value={formData.fullName}
               onChange={handleChange}
               required
+              className={formErrors.fullName ? "error" : ""}
             />
+            {formErrors.fullName && (
+              <span className="error-message">
+                <FaInfoCircle /> {formErrors.fullName}
+              </span>
+            )}
           </div>
 
           <div className="form-row">
@@ -206,7 +320,13 @@ const Book = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                className={formErrors.email ? "error" : ""}
               />
+              {formErrors.email && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.email}
+                </span>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="phone">
@@ -220,58 +340,44 @@ const Book = () => {
                 value={formData.phone}
                 onChange={handleChange}
                 required
+                className={formErrors.phone ? "error" : ""}
               />
+              {formErrors.phone && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.phone}
+                </span>
+              )}
             </div>
           </div>
 
           <div className="form-group">
             <label>Gender</label>
             <div className="gender-options">
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="male"
-                  checked={formData.gender === "male"}
-                  onChange={handleChange}
-                />
-                <span className="radio-custom"></span>
-                <span>Male</span>
-              </label>
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="female"
-                  checked={formData.gender === "female"}
-                  onChange={handleChange}
-                />
-                <span className="radio-custom"></span>
-                <span>Female</span>
-              </label>
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="other"
-                  checked={formData.gender === "other"}
-                  onChange={handleChange}
-                />
-                <span className="radio-custom"></span>
-                <span>Other</span>
-              </label>
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="prefer-not-to-say"
-                  checked={formData.gender === "prefer-not-to-say"}
-                  onChange={handleChange}
-                />
-                <span className="radio-custom"></span>
-                <span>Prefer not to say</span>
-              </label>
+              {["male", "female", "other", "prefer-not-to-say"].map(
+                (gender) => (
+                  <label key={gender} className="radio-option">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={gender}
+                      checked={formData.gender === gender}
+                      onChange={handleChange}
+                    />
+                    <span className="radio-custom"></span>
+                    <span>
+                      {gender === "prefer-not-to-say"
+                        ? "Prefer not to say"
+                        : gender.charAt(0).toUpperCase() + gender.slice(1)}
+                    </span>
+                  </label>
+                )
+              )}
             </div>
+            {formErrors.gender && (
+              <span className="error-message">
+                <FaInfoCircle /> {formErrors.gender}
+              </span>
+            )}
           </div>
 
           <h2>
@@ -290,8 +396,14 @@ const Book = () => {
                 value={formData.preferredDate}
                 onChange={handleChange}
                 required
-                min={new Date().toISOString().split("T")[0]}
+                min={minDate}
+                className={formErrors.preferredDate ? "error" : ""}
               />
+              {formErrors.preferredDate && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.preferredDate}
+                </span>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="preferredTime">
@@ -303,21 +415,20 @@ const Book = () => {
                 value={formData.preferredTime}
                 onChange={handleChange}
                 required
+                className={formErrors.preferredTime ? "error" : ""}
               >
                 <option value="">Select time slot</option>
-                <option value="08:00-10:00">
-                  Morning (8:00 AM - 10:00 AM)
-                </option>
-                <option value="10:00-12:00">
-                  Late Morning (10:00 AM - 12:00 PM)
-                </option>
-                <option value="12:00-14:00">
-                  Afternoon (12:00 PM - 2:00 PM)
-                </option>
-                <option value="14:00-16:00">
-                  Early Evening (2:00 PM - 4:00 PM)
-                </option>
+                {timeSlots.map((slot) => (
+                  <option key={slot.value} value={slot.value}>
+                    {slot.label}
+                  </option>
+                ))}
               </select>
+              {formErrors.preferredTime && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.preferredTime}
+                </span>
+              )}
             </div>
           </div>
 
@@ -335,7 +446,13 @@ const Book = () => {
               value={formData.street}
               onChange={handleChange}
               required
+              className={formErrors.street ? "error" : ""}
             />
+            {formErrors.street && (
+              <span className="error-message">
+                <FaInfoCircle /> {formErrors.street}
+              </span>
+            )}
           </div>
 
           <div className="form-row">
@@ -349,7 +466,13 @@ const Book = () => {
                 value={formData.city}
                 onChange={handleChange}
                 required
+                className={formErrors.city ? "error" : ""}
               />
+              {formErrors.city && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.city}
+                </span>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="state">State/Province</label>
@@ -361,7 +484,13 @@ const Book = () => {
                 value={formData.state}
                 onChange={handleChange}
                 required
+                className={formErrors.state ? "error" : ""}
               />
+              {formErrors.state && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.state}
+                </span>
+              )}
             </div>
           </div>
 
@@ -376,7 +505,13 @@ const Book = () => {
                 value={formData.zip}
                 onChange={handleChange}
                 required
+                className={formErrors.zip ? "error" : ""}
               />
+              {formErrors.zip && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.zip}
+                </span>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="country">Country</label>
@@ -386,15 +521,26 @@ const Book = () => {
                 value={formData.country}
                 onChange={handleChange}
                 required
+                className={formErrors.country ? "error" : ""}
               >
                 <option value="">Select country</option>
-                <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Australia">Australia</option>
-                <option value="India">India</option>
-                <option value="Other">Other</option>
+                {[
+                  "United States",
+                  "Canada",
+                  "United Kingdom",
+                  "Australia",
+                  "India",
+                ].map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
               </select>
+              {formErrors.country && (
+                <span className="error-message">
+                  <FaInfoCircle /> {formErrors.country}
+                </span>
+              )}
             </div>
           </div>
 
@@ -416,7 +562,7 @@ const Book = () => {
               <FaShieldAlt className="privacy-icon" />
               <p>
                 Your information is secure and will only be used for your
-                appointment.
+                appointment. We adhere to strict privacy policies.
               </p>
             </div>
             <div className="form-actions">
@@ -455,6 +601,7 @@ const Book = () => {
           --success-light: #d1fae5;
           --warning-color: #f59e0b;
           --error-color: #ef4444;
+          --error-light: #fee2e2;
           --border-radius: 10px;
           --border-radius-lg: 16px;
           --border-radius-xl: 24px;
@@ -496,6 +643,7 @@ const Book = () => {
           align-items: center;
           justify-content: space-between;
           min-height: 220px;
+          box-shadow: var(--box-shadow-lg);
         }
 
         .book-header::before {
@@ -542,30 +690,12 @@ const Book = () => {
           align-items: center;
           gap: 0.5rem;
           backdrop-filter: blur(5px);
+          transition: var(--transition);
         }
 
-        .header-illustration {
-          position: relative;
-          z-index: 1;
-        }
-
-        .doctor-icon {
-          font-size: 6rem;
-          opacity: 0.8;
-          transform: rotate(-10deg);
-          animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-          0% {
-            transform: translateY(0) rotate(-10deg);
-          }
-          50% {
-            transform: translateY(-15px) rotate(-10deg);
-          }
-          100% {
-            transform: translateY(0) rotate(-10deg);
-          }
+        .badge:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-2px);
         }
 
         /* Success Message */
@@ -580,6 +710,7 @@ const Book = () => {
           margin: 1rem;
           animation: fadeIn 0.5s ease-out;
           border-left: 4px solid var(--success-color);
+          box-shadow: var(--box-shadow);
         }
 
         .success-icon {
@@ -660,23 +791,6 @@ const Book = () => {
           font-size: 1.5rem;
         }
 
-        .test-rating {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .stars {
-          color: #f59e0b;
-          font-size: 1rem;
-        }
-
-        .review-count {
-          color: var(--secondary-color);
-          font-size: 0.85rem;
-        }
-
         .test-description {
           color: var(--secondary-color);
           line-height: 1.7;
@@ -748,13 +862,8 @@ const Book = () => {
           color: var(--primary-dark);
         }
 
-        .test-benefits ul {
+        .test-benefits p {
           margin: 0;
-          padding-left: 1.25rem;
-        }
-
-        .test-benefits li {
-          margin-bottom: 0.5rem;
           color: var(--secondary-color);
           line-height: 1.6;
         }
@@ -783,12 +892,6 @@ const Book = () => {
           font-weight: 700;
         }
 
-        .price-note {
-          color: var(--secondary-color);
-          font-size: 0.85rem;
-          flex-basis: 100%;
-        }
-
         .test-availability {
           display: flex;
           align-items: center;
@@ -809,63 +912,6 @@ const Book = () => {
           box-shadow: var(--box-shadow-lg);
           margin-bottom: 7rem;
           border: 1px solid var(--secondary-light);
-        }
-
-        .form-progress {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 2.5rem;
-          position: relative;
-        }
-
-        .form-progress::before {
-          content: "";
-          position: absolute;
-          top: 15px;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: var(--secondary-light);
-          z-index: 0;
-        }
-
-        .progress-step {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          position: relative;
-          z-index: 1;
-        }
-
-        .progress-step span {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: var(--secondary-light);
-          color: var(--secondary-color);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-        }
-
-        .progress-step p {
-          margin: 0;
-          font-size: 0.85rem;
-          color: var(--secondary-color);
-          font-weight: 500;
-          text-align: center;
-        }
-
-        .progress-step.active span {
-          background: var(--primary-color);
-          color: white;
-        }
-
-        .progress-step.active p {
-          color: var(--primary-dark);
-          font-weight: 600;
         }
 
         .booking-form h2 {
@@ -939,6 +985,21 @@ const Book = () => {
           box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
           outline: none;
           background: white;
+        }
+
+        input.error,
+        select.error {
+          border-color: var(--error-color);
+          background-color: var(--error-light);
+        }
+
+        .error-message {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--error-color);
+          font-size: 0.85rem;
+          margin-top: 0.5rem;
         }
 
         input[type="date"]::-webkit-calendar-picker-indicator {

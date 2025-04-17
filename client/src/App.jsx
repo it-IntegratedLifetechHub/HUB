@@ -116,7 +116,7 @@ const App = () => {
           }
         />
         <Route
-          path="/booking"
+          path="/booking/:categoryId/test/:test"
           element={
             <PatientRoute
               element={<Book />}

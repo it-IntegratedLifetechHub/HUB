@@ -75,8 +75,20 @@ const SingleTest = () => {
   }, [categoryId, decodedTestName]);
 
   const handleBookTest = () => {
-    console.log(`Booking test: ${decodedTestName}`);
-    // Optionally implement booking logic here
+    navigate(
+      `/booking/${categoryId}/test/${encodeURIComponent(decodedTestName)}`,
+      {
+        state: {
+          testDetails: {
+            name: decodedTestName,
+            categoryId,
+            price: testDetails.totalCost,
+            icon: testDetails.icon,
+            ...testDetails,
+          },
+        },
+      }
+    );
   };
 
   if (loading) {
@@ -190,7 +202,7 @@ const SingleTest = () => {
         .single-test-page-container {
           padding: 2.5rem;
           max-width: 950px;
-          margin: 2rem auto;
+          margin: 1rem auto 7rem;
           background: white;
           border-radius: 1.5rem;
           box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
