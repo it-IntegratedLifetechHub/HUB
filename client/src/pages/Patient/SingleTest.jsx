@@ -206,7 +206,8 @@ const SingleTest = () => {
           background: white;
           border-radius: 1.5rem;
           box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-          font-family: "Inter", sans-serif;
+
+          font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         /* Header Styles */

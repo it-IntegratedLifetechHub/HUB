@@ -251,6 +251,7 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     minHeight: "100vh",
+
     background: "linear-gradient(135deg, #5e0d97 0%, #3a0475 100%)",
     fontFamily: '"Segoe UI", Roboto, sans-serif',
     padding: "20px",

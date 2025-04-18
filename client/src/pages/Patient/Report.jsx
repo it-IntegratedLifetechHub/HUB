@@ -187,6 +187,8 @@ const Report = () => {
           max-width: 1000px;
           margin: 30px auto 100px auto;
           padding: 20px;
+
+          font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .page-header {

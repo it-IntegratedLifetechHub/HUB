@@ -651,7 +651,8 @@ const Profile = () => {
           background: white;
           border-radius: 16px;
           box-shadow: var(--box-shadow);
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+          font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         /* Profile Header */

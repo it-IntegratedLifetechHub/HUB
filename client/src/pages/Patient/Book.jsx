@@ -10,7 +10,6 @@ import {
   FaUserMd,
   FaNotesMedical,
   FaArrowRight,
-  FaCheckCircle,
   FaShieldAlt,
   FaRupeeSign,
   FaFlask,
@@ -209,7 +208,6 @@ const Book = () => {
       <div className="book-content">
         {/* Test Information Card */}
         <div className="test-info-card">
-          <div className="test-badge">Popular Test</div>
           <div className="test-header">
             <h2>
               <span className="test-icon">
@@ -271,10 +269,6 @@ const Book = () => {
                   <FaRupeeSign />{" "}
                   {testDetails.totalCost.toLocaleString("en-IN")}
                 </span>
-              </div>
-              <div className="test-availability">
-                <FaCheckCircle className="availability-icon" />
-                <span>Available at all locations</span>
               </div>
             </div>
           </div>
@@ -622,7 +616,7 @@ const Book = () => {
           max-width: 1200px;
           margin: 0 auto;
           padding: 0 1rem 6rem;
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
           color: var(--dark-color);
         }
 

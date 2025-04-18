@@ -469,7 +469,7 @@ const Orders = () => {
           margin: 0 auto;
           padding: 20px;
           padding-bottom: 100px;
-          font-family: "Outfit", sans-serif;
+          font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .page-title {
