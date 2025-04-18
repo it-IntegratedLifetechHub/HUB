@@ -6,9 +6,11 @@ import {
   FaLock,
   FaChevronDown,
   FaCheck,
+  FaSearch,
 } from "react-icons/fa";
 import { CiBank } from "react-icons/ci";
-import { BsCheckCircleFill } from "react-icons/bs";
+import { BsCheckCircleFill, BsCreditCard } from "react-icons/bs";
+import { RiVisaLine, RiMastercardLine } from "react-icons/ri";
 import RazorLogo from "../assets/razorpay.png";
 import UPI from "../assets/UPI.svg";
 import PhonePay from "../assets/phonepay.png";
@@ -29,11 +31,19 @@ const Payment = () => {
   const [showSavedCards, setShowSavedCards] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [cardType, setCardType] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "number") {
+      // Detect card type
+      const firstDigit = value.replace(/\s/g, "").charAt(0);
+      if (firstDigit === "4") setCardType("visa");
+      else if (firstDigit === "5") setCardType("mastercard");
+      else if (firstDigit === "6") setCardType("rupay");
+      else setCardType("");
+
       const formattedValue = value
         .replace(/\s/g, "")
         .replace(/(\d{4})/g, "$1 ")
@@ -119,6 +129,20 @@ const Payment = () => {
     });
     setUpiId("");
     setBankSearch("");
+    setCardType("");
+  };
+
+  const renderCardIcon = () => {
+    switch (cardType) {
+      case "visa":
+        return <RiVisaLine className="card-type-icon visa" />;
+      case "mastercard":
+        return <RiMastercardLine className="card-type-icon mastercard" />;
+      case "rupay":
+        return <FaRupeeSign className="card-type-icon rupay" />;
+      default:
+        return <BsCreditCard className="card-type-icon default" />;
+    }
   };
 
   return (
@@ -169,7 +193,10 @@ const Payment = () => {
             </div>
             <div className="amount-display">
               <span>Amount to pay:</span>
-              <div className="amount">₹135.00</div>
+              <div className="amount">
+                <FaRupeeSign className="rupee-icon" />
+                <span>135.00</span>
+              </div>
             </div>
           </div>
 
@@ -180,7 +207,7 @@ const Payment = () => {
                 onClick={() => setActiveTab("card")}
               >
                 <FaCreditCard className="tab-icon" />
-                <span>Credit/Debit Card</span>
+                <span>Card</span>
               </button>
               <button
                 className={`method-tab ${activeTab === "upi" ? "active" : ""}`}
@@ -206,7 +233,7 @@ const Payment = () => {
                   <div className="form-group">
                     <label>Card Number</label>
                     <div className="input-with-icon">
-                      <FaCreditCard className="input-icon" />
+                      {renderCardIcon()}
                       <input
                         type="text"
                         name="number"
@@ -216,11 +243,6 @@ const Payment = () => {
                         maxLength="19"
                         className="card-input"
                       />
-                      <div className="card-brands">
-                        <span className="card-brand visa">VISA</span>
-                        <span className="card-brand mastercard">MC</span>
-                        <span className="card-brand rupay">RUPAY</span>
-                      </div>
                     </div>
                   </div>
 
@@ -295,7 +317,17 @@ const Payment = () => {
                               onClick={() => setSelectedCard(card.id)}
                             >
                               <div className="card-top">
-                                <div className="card-type">{card.type}</div>
+                                <div
+                                  className={`card-type ${
+                                    card.type === "VISA" ? "visa" : "mastercard"
+                                  }`}
+                                >
+                                  {card.type === "VISA" ? (
+                                    <RiVisaLine />
+                                  ) : (
+                                    <RiMastercardLine />
+                                  )}
+                                </div>
                                 <div className="card-bank">{card.bank}</div>
                               </div>
                               <div className="card-middle">
@@ -407,6 +439,7 @@ const Payment = () => {
                   <div className="form-group">
                     <label>Search for your bank</label>
                     <div className="bank-search">
+                      <FaSearch className="search-icon" />
                       <input
                         type="text"
                         value={bankSearch}
@@ -477,19 +510,23 @@ const Payment = () => {
 
       <style jsx>{`
         :root {
-          --primary-color: #10b981;
-          --primary-dark: #059669;
-          --primary-light: #d1fae5;
+          --primary-color: #1246cb;
+          --primary-dark: #4c1d95;
+          --primary-light: #c4b5fd;
+          --primary-lighter: #ede9fe;
           --secondary-color: #64748b;
           --light-color: #f8fafc;
           --dark-color: #1e293b;
-          --border-radius: 12px;
-          --border-radius-sm: 8px;
+          --border-radius: 16px;
+          --border-radius-sm: 12px;
+          --border-radius-xs: 8px;
           --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-          --success-color: #10b981;
+          --box-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+          --success-color: #1246cb;
           --error-color: #ef4444;
           --warning-color: #f59e0b;
           --font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+          --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -504,9 +541,16 @@ const Payment = () => {
           font-family: var(--font-family);
           border-radius: var(--border-radius);
           overflow: hidden;
-          box-shadow: var(--box-shadow);
+          box-shadow: var(--box-shadow-lg);
           background: white;
           border: 1px solid #e2e8f0;
+          transform: translateY(0);
+          transition: var(--transition);
+        }
+
+        .payment-container:hover {
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+          transform: translateY(-2px);
         }
 
         .payment-header {
@@ -516,10 +560,22 @@ const Payment = () => {
             var(--primary-color)
           );
           color: white;
-          padding: 1.5rem;
+          padding: 1.75rem;
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.75rem;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .payment-header::after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, var(--primary-light), #ec4899);
         }
 
         .logo-container {
@@ -527,23 +583,32 @@ const Payment = () => {
           justify-content: space-between;
           align-items: center;
           flex-direction: column;
+          gap: 1rem;
         }
 
         .logo {
           height: 50%;
           width: 90%;
           object-fit: contain;
+          filter: brightness(0) invert(1);
         }
 
         .secure-badge {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           background: rgba(255, 255, 255, 0.15);
-          padding: 0.5rem 0.8rem;
+          padding: 0.6rem 1rem;
           border-radius: 20px;
           font-weight: 500;
+          backdrop-filter: blur(5px);
+          transition: var(--transition);
+        }
+
+        .secure-badge:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-2px);
         }
 
         .shield-icon {
@@ -554,33 +619,40 @@ const Payment = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          font-size: 0.95rem;
+          font-size: 1rem;
           opacity: 0.9;
         }
 
         .amount {
-          font-size: 1.4rem;
-          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+
+        .rupee-icon {
+          font-size: 1.2rem;
         }
 
         .payment-body {
-          padding: 1.5rem;
+          padding: 1.75rem;
         }
 
         .payment-methods {
           display: flex;
-          margin-bottom: 1.5rem;
+          margin-bottom: 1.75rem;
           border-bottom: 1px solid #e2e8f0;
           gap: 0.5rem;
         }
 
         .method-tab {
           flex: 1;
-          padding: 0.75rem 0.5rem;
+          padding: 0.85rem 0.5rem;
           border: none;
           background: none;
           cursor: pointer;
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -588,8 +660,9 @@ const Payment = () => {
           gap: 0.5rem;
           color: var(--secondary-color);
           border-bottom: 2px solid transparent;
-          transition: all 0.2s ease;
-          border-radius: var(--border-radius-sm);
+          transition: var(--transition);
+          border-radius: var(--border-radius-xs);
+          position: relative;
         }
 
         .method-tab:hover {
@@ -600,17 +673,30 @@ const Payment = () => {
         .method-tab.active {
           color: var(--primary-color);
           border-bottom: 2px solid var(--primary-color);
-          font-weight: 500;
-          background: #f8fafc;
+          font-weight: 600;
+          background: var(--primary-lighter);
+        }
+
+        .method-tab.active::after {
+          content: "";
+          position: absolute;
+          bottom: -8px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 12px;
+          height: 12px;
+          background: white;
+          border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .tab-icon {
-          font-size: 1.2rem;
+          font-size: 1.3rem;
         }
 
         .upi-icon {
-          width: 20px;
-          height: 20px;
+          width: 22px;
+          height: 22px;
         }
 
         .payment-content {
@@ -631,17 +717,18 @@ const Payment = () => {
 
         input {
           width: 100%;
-          padding: 0.9rem 1rem;
+          padding: 1rem 1.25rem;
           border: 1px solid #e2e8f0;
           border-radius: var(--border-radius-sm);
           font-size: 1rem;
-          transition: all 0.2s ease;
+          transition: var(--transition);
           font-family: var(--font-family);
+          background: white;
         }
 
         input:focus {
           border-color: var(--primary-color);
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+          box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.1);
           outline: none;
         }
 
@@ -651,49 +738,34 @@ const Payment = () => {
           align-items: center;
         }
 
-        .input-icon {
+        .card-type-icon {
           position: absolute;
           left: 1rem;
-          color: var(--secondary-color);
           z-index: 1;
-          font-size: 1rem;
+          font-size: 1.5rem;
         }
 
-        .card-input {
-          padding-left: 3rem;
-          padding-right: 7rem;
-          letter-spacing: 1px;
-          font-size: 0.95rem;
+        .card-type-icon.visa {
+          color: #1a1f71;
         }
 
-        .card-brands {
-          position: absolute;
-          right: 1rem;
-          display: flex;
-          gap: 0.5rem;
+        .card-type-icon.mastercard {
+          color: #eb001b;
         }
 
-        .card-brand {
-          font-size: 0.7rem;
-          font-weight: 700;
-          padding: 0.15rem 0.35rem;
-          border-radius: 3px;
+        .card-type-icon.rupay {
+          color: #003082;
+        }
+
+        .card-type-icon.default {
+          color: var(--secondary-color);
           opacity: 0.7;
         }
 
-        .card-brand.visa {
-          background: #1a1f71;
-          color: white;
-        }
-
-        .card-brand.mastercard {
-          background: #eb001b;
-          color: white;
-        }
-
-        .card-brand.rupay {
-          background: #003082;
-          color: white;
+        .card-input {
+          padding-left: 3.5rem;
+          letter-spacing: 1px;
+          font-size: 0.95rem;
         }
 
         .name-input {
@@ -728,10 +800,11 @@ const Payment = () => {
           border-radius: var(--border-radius-sm);
           margin: 2rem 0;
           overflow: hidden;
+          background: white;
         }
 
         .saved-card-header {
-          padding: 1rem;
+          padding: 1.25rem;
           background: #f8fafc;
           display: flex;
           justify-content: space-between;
@@ -739,7 +812,7 @@ const Payment = () => {
           font-size: 0.95rem;
           color: var(--dark-color);
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition);
         }
 
         .saved-card-header:hover {
@@ -761,7 +834,7 @@ const Payment = () => {
         }
 
         .chevron {
-          transition: all 0.3s ease;
+          transition: var(--transition);
           color: var(--secondary-color);
           font-size: 0.9rem;
         }
@@ -776,13 +849,13 @@ const Payment = () => {
         }
 
         .saved-card-item {
-          padding: 1.25rem 1rem;
+          padding: 1.5rem 1.25rem;
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
           position: relative;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition);
         }
 
         .saved-card-item:not(:last-child) {
@@ -805,18 +878,19 @@ const Payment = () => {
         }
 
         .card-type {
-          background: var(--primary-color);
-          color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+          font-size: 1.5rem;
+        }
+
+        .card-type.visa {
+          color: #1a1f71;
+        }
+
+        .card-type.mastercard {
+          color: #eb001b;
         }
 
         .card-bank {
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           color: var(--secondary-color);
         }
 
@@ -840,7 +914,7 @@ const Payment = () => {
 
         .check-icon {
           position: absolute;
-          right: 1rem;
+          right: 1.25rem;
           top: 50%;
           transform: translateY(-50%);
           color: var(--success-color);
@@ -853,7 +927,7 @@ const Payment = () => {
 
         .pay-button {
           width: 100%;
-          padding: 1.1rem;
+          padding: 1.25rem;
           background: linear-gradient(
             135deg,
             var(--primary-dark),
@@ -862,23 +936,24 @@ const Payment = () => {
           color: white;
           border: none;
           border-radius: var(--border-radius-sm);
-          font-size: 1rem;
+          font-size: 1.05rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition);
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.75rem;
-          margin-top: 1rem;
+          margin-top: 1.5rem;
           position: relative;
           overflow: hidden;
+          box-shadow: 0 4px 12px rgba(106, 13, 173, 0.2);
         }
 
         .pay-button:hover:not(:disabled) {
           opacity: 0.95;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(106, 13, 173, 0.3);
         }
 
         .pay-button:disabled {
@@ -886,6 +961,7 @@ const Payment = () => {
           color: #94a3b8;
           cursor: not-allowed;
           opacity: 0.8;
+          box-shadow: none;
         }
 
         .pay-button.processing {
@@ -915,7 +991,7 @@ const Payment = () => {
         .upi-method {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.75rem;
         }
 
         .upi-id-input {
@@ -929,12 +1005,12 @@ const Payment = () => {
         }
 
         .verify-button {
-          padding: 0 1.25rem;
+          padding: 0 1.5rem;
           background: #f1f5f9;
           border: 1px solid #e2e8f0;
           border-radius: var(--border-radius-sm);
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition);
           white-space: nowrap;
           font-weight: 500;
           font-size: 0.9rem;
@@ -954,7 +1030,7 @@ const Payment = () => {
           color: var(--secondary-color);
           text-align: center;
           position: relative;
-          margin: 1rem 0;
+          margin: 1.5rem 0;
         }
 
         .section-title::before,
@@ -987,11 +1063,11 @@ const Payment = () => {
           flex-direction: column;
           align-items: center;
           gap: 0.75rem;
-          padding: 1.25rem 0.5rem;
+          padding: 1.5rem 0.5rem;
           border: 1px solid #e2e8f0;
           border-radius: var(--border-radius-sm);
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition);
         }
 
         .upi-app:hover {
@@ -1000,23 +1076,24 @@ const Payment = () => {
         }
 
         .app-icon-container {
-          width: 48px;
-          height: 48px;
+          width: 52px;
+          height: 52px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 0.5rem;
+          transition: var(--transition);
         }
 
         .app-icon {
-          width: 24px;
-          height: 24px;
+          width: 26px;
+          height: 26px;
           object-fit: contain;
         }
 
         .app-name {
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           text-align: center;
           font-weight: 500;
         }
@@ -1029,23 +1106,40 @@ const Payment = () => {
         .netbanking-method {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.75rem;
+        }
+
+        .bank-search {
+          position: relative;
+        }
+
+        .search-icon {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--secondary-color);
+          font-size: 1rem;
         }
 
         .bank-search-input {
           font-size: 0.95rem;
+          padding-left: 2.75rem;
         }
 
         .bank-list-container {
           max-height: 300px;
           overflow-y: auto;
           margin-top: 0.5rem;
+          border-radius: var(--border-radius-sm);
+          border: 1px solid #e2e8f0;
         }
 
         .bank-list {
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
+          padding: 0.75rem;
         }
 
         .bank-item {
@@ -1056,25 +1150,29 @@ const Payment = () => {
           border: 1px solid #e2e8f0;
           border-radius: var(--border-radius-sm);
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition);
+          background: white;
         }
 
         .bank-item:hover {
           border-color: var(--primary-color);
           background: #f8fafc;
+          transform: translateY(-2px);
+          box-shadow: var(--box-shadow);
         }
 
         .bank-logo {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
-          background: var(--primary-light);
+          background: var(--primary-lighter);
           color: var(--primary-dark);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           font-weight: 700;
+          flex-shrink: 0;
         }
 
         .bank-details {
@@ -1111,16 +1209,16 @@ const Payment = () => {
 
         /* Payment Footer */
         .payment-footer {
-          margin-top: 2rem;
+          margin-top: 2.5rem;
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.75rem;
         }
 
         .security-assurance {
           display: flex;
           justify-content: center;
-          gap: 1.5rem;
+          gap: 1.75rem;
           flex-wrap: wrap;
         }
 
@@ -1128,17 +1226,18 @@ const Payment = () => {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           color: var(--secondary-color);
+          padding: 0.5rem 0;
         }
 
         .security-icon {
           color: var(--success-color);
-          font-size: 0.9rem;
+          font-size: 0.95rem;
         }
 
         .payment-terms {
-          font-size: 0.75rem;
+          font-size: 0.8rem;
           color: var(--secondary-color);
           text-align: center;
           line-height: 1.5;
@@ -1156,7 +1255,7 @@ const Payment = () => {
 
         /* Success Screen Styles */
         .success-screen {
-          padding: 2.5rem 1.5rem;
+          padding: 3rem 1.75rem;
           text-align: center;
           display: flex;
           flex-direction: column;
