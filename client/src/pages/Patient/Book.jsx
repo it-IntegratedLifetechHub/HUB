@@ -14,8 +14,15 @@ import {
   FaRupeeSign,
   FaFlask,
   FaInfoCircle,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaHome,
+  FaPlus,
+  FaMinus,
+  FaSpinner,
 } from "react-icons/fa";
 import BottomNavigation from "../../components/BottomNav";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Book = () => {
   const { categoryId, test: testNameParam } = useParams();
@@ -23,7 +30,7 @@ const Book = () => {
   const navigate = useNavigate();
   const decodedTestName = decodeURIComponent(testNameParam);
 
-  // Get test details from location state or initialize empty
+  // State management
   const [testDetails, setTestDetails] = useState(
     state?.testDetails || {
       name: decodedTestName,
@@ -55,25 +62,38 @@ const Book = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [activeAccordion, setActiveAccordion] = useState(null);
+  const [apiError, setApiError] = useState(null);
+  const [loadingTestDetails, setLoadingTestDetails] = useState(
+    !state?.testDetails
+  );
 
-  // If test details weren't passed in state, fetch them
+  // Fetch test details if not passed in state
   useEffect(() => {
     if (!state?.testDetails) {
       const fetchTestDetails = async () => {
         try {
-          const res = await fetch(
+          const response = await fetch(
             `${import.meta.env.VITE_API_URL}/api/categories/${categoryId}/tests`
           );
-          if (!res.ok) throw new Error("Failed to fetch test details");
-
-          const data = await res.json();
+          if (!response.ok) {
+            throw new Error("Failed to fetch test details");
+          }
+          const data = await response.json();
           const foundTest = data.data.find((t) => t.name === decodedTestName);
 
-          if (!foundTest) throw new Error("Test not found");
+          if (!foundTest) {
+            throw new Error("Test not found");
+          }
 
           setTestDetails(foundTest);
         } catch (err) {
           console.error("Error fetching test details:", err);
+          setApiError(
+            err.message || "Failed to load test details. Please try again."
+          );
+        } finally {
+          setLoadingTestDetails(false);
         }
       };
 
@@ -81,23 +101,77 @@ const Book = () => {
     }
   }, [categoryId, decodedTestName, state]);
 
+  // Form validation
   const validateForm = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[0-9]{10,15}$/;
+    const zipRegex = /^[0-9]{5,6}(?:-[0-9]{4})?$/;
 
-    if (!formData.fullName.trim()) errors.fullName = "Full name is required";
-    if (!emailRegex.test(formData.email))
+    if (!formData.fullName.trim()) {
+      errors.fullName = "Full name is required";
+    } else if (formData.fullName.length > 100) {
+      errors.fullName = "Name must be less than 100 characters";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
       errors.email = "Invalid email address";
-    if (!phoneRegex.test(formData.phone)) errors.phone = "Invalid phone number";
-    if (!formData.gender) errors.gender = "Please select a gender";
-    if (!formData.preferredDate) errors.preferredDate = "Date is required";
-    if (!formData.preferredTime) errors.preferredTime = "Time slot is required";
-    if (!formData.street.trim()) errors.street = "Street address is required";
-    if (!formData.city.trim()) errors.city = "City is required";
-    if (!formData.state.trim()) errors.state = "State is required";
-    if (!formData.zip.trim()) errors.zip = "ZIP code is required";
-    if (!formData.country) errors.country = "Country is required";
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required";
+    } else if (!phoneRegex.test(formData.phone)) {
+      errors.phone = "Invalid phone number (10-15 digits)";
+    }
+
+    if (!formData.gender) {
+      errors.gender = "Please select a gender";
+    }
+
+    if (!formData.preferredDate) {
+      errors.preferredDate = "Date is required";
+    } else {
+      const selectedDate = new Date(formData.preferredDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        errors.preferredDate = "Date must be today or in the future";
+      }
+    }
+
+    if (!formData.preferredTime) {
+      errors.preferredTime = "Time slot is required";
+    }
+
+    if (!formData.street.trim()) {
+      errors.street = "Street address is required";
+    } else if (formData.street.length > 200) {
+      errors.street = "Address must be less than 200 characters";
+    }
+
+    if (!formData.city.trim()) {
+      errors.city = "City is required";
+    } else if (formData.city.length > 50) {
+      errors.city = "City name must be less than 50 characters";
+    }
+
+    if (!formData.state.trim()) {
+      errors.state = "State is required";
+    } else if (formData.state.length > 50) {
+      errors.state = "State name must be less than 50 characters";
+    }
+
+    if (!formData.zip.trim()) {
+      errors.zip = "ZIP code is required";
+    } else if (!zipRegex.test(formData.zip)) {
+      errors.zip = "Invalid ZIP code format";
+    }
+
+    if (!formData.country) {
+      errors.country = "Country is required";
+    }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -110,7 +184,6 @@ const Book = () => {
       [name]: value,
     }));
 
-    // Clear error when user starts typing
     if (formErrors[name]) {
       setFormErrors((prev) => ({
         ...prev,
@@ -121,41 +194,72 @@ const Book = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setApiError(null);
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      const firstError = Object.keys(formErrors).find((key) => formErrors[key]);
+      if (firstError) {
+        document.getElementById(firstError)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
-      // Actual API call would go here
+      const orderData = {
+        testDetails: {
+          name: testDetails.name,
+          categoryId: testDetails.categoryId,
+          totalCost: testDetails.totalCost,
+          description: testDetails.description,
+          preparation: testDetails.preparation,
+          turnaroundTime: testDetails.turnaroundTime,
+          specialist: testDetails.specialist,
+          whyToTake: testDetails.whyToTake,
+        },
+        ...formData,
+      };
+
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/bookings`,
+        `${import.meta.env.VITE_API_URL}/api/orders`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            ...formData,
-            testId: testDetails._id,
-            testName: testDetails.name,
-            categoryId,
-            price: testDetails.totalCost,
-          }),
+          body: JSON.stringify(orderData),
         }
       );
 
-      if (!response.ok) throw new Error("Booking failed");
+      const responseData = await response.json();
 
-      setIsSuccess(true);
+      if (!response.ok) {
+        throw new Error(
+          responseData.message ||
+            `Request failed with status ${response.status}`
+        );
+      }
 
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setIsSuccess(false);
-        navigate("/appointments"); // Redirect to appointments page
-      }, 3000);
+      if (responseData.success) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          navigate("/appointments", {
+            state: {
+              bookingSuccess: true,
+              bookingData: responseData.data,
+            },
+          });
+        }, 3000);
+      } else {
+        throw new Error(responseData.message || "Booking failed");
+      }
     } catch (err) {
       console.error("Booking error:", err);
+      setApiError(err.message || "Failed to create booking. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -166,7 +270,6 @@ const Book = () => {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDate = tomorrow.toISOString().split("T")[0];
 
-  // Available time slots
   const timeSlots = [
     { value: "08:00-10:00", label: "Morning (08:00-10:00)" },
     { value: "10:00-12:00", label: "Late Morning (10:00-12:00)" },
@@ -174,10 +277,44 @@ const Book = () => {
     { value: "14:00-16:00", label: "Early Evening (14:00-16:00)" },
   ];
 
+  const toggleAccordion = (index) => {
+    setActiveAccordion(activeAccordion === index ? null : index);
+  };
+
+  if (loadingTestDetails) {
+    return (
+      <div className="loading-container">
+        <FaSpinner className="spinner" />
+        <p>Loading test details...</p>
+      </div>
+    );
+  }
+
+  if (apiError && !state?.testDetails) {
+    return (
+      <div className="error-container">
+        <div className="error-message">
+          <FaExclamationTriangle className="error-icon" />
+          <h3>{apiError}</h3>
+          <button
+            className="retry-btn"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="book-container">
       {/* Header with gradient background */}
-      <div className="book-header">
+      <motion.div
+        className="book-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="header-content">
           <h1>Book Your Test</h1>
           <p>Complete your booking in just a few steps</p>
@@ -193,21 +330,54 @@ const Book = () => {
             </span>
           </div>
         </div>
-      </div>
-
-      {isSuccess && (
-        <div className="success-message">
-          <FaCheckCircle className="success-icon" />
-          <div>
-            <h3>Appointment Booked Successfully!</h3>
-            <p>We've sent confirmation details to your email.</p>
-          </div>
+        <div className="header-illustration">
+          <div className="illustration-circle"></div>
+          <div className="illustration-dots"></div>
         </div>
-      )}
+      </motion.div>
+
+      <AnimatePresence>
+        {isSuccess && (
+          <motion.div
+            className="success-message"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <FaCheckCircle className="success-icon" />
+            <div>
+              <h3>Appointment Booked Successfully!</h3>
+              <p>We've sent confirmation details to your email.</p>
+            </div>
+          </motion.div>
+        )}
+
+        {apiError && (
+          <motion.div
+            className="error-message"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <FaExclamationTriangle className="error-icon" />
+            <div>
+              <h3>Booking Error</h3>
+              <p>{apiError}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="book-content">
         {/* Test Information Card */}
-        <div className="test-info-card">
+        <motion.div
+          className="test-info-card"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
           <div className="test-header">
             <h2>
               <span className="test-icon">
@@ -255,27 +425,88 @@ const Book = () => {
               </div>
             </div>
 
-            {testDetails.whyToTake && (
-              <div className="test-benefits">
-                <h4>Why Take This Test?</h4>
-                <p>{testDetails.whyToTake}</p>
+            <div className="accordion-section">
+              {testDetails.whyToTake && (
+                <div className="accordion-item">
+                  <button
+                    className="accordion-header"
+                    onClick={() => toggleAccordion(0)}
+                    aria-expanded={activeAccordion === 0}
+                  >
+                    <span>Why Take This Test?</span>
+                    {activeAccordion === 0 ? <FaMinus /> : <FaPlus />}
+                  </button>
+                  <AnimatePresence>
+                    {activeAccordion === 0 && (
+                      <motion.div
+                        className="accordion-content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <p>{testDetails.whyToTake}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              <div className="accordion-item">
+                <button
+                  className="accordion-header"
+                  onClick={() => toggleAccordion(1)}
+                  aria-expanded={activeAccordion === 1}
+                >
+                  <span>What to Expect</span>
+                  {activeAccordion === 1 ? <FaMinus /> : <FaPlus />}
+                </button>
+                <AnimatePresence>
+                  {activeAccordion === 1 && (
+                    <motion.div
+                      className="accordion-content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <p>
+                        Our professional will arrive at your location at the
+                        scheduled time with all necessary equipment. The test
+                        will be conducted in a clean, professional manner with
+                        your comfort in mind.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            )}
+            </div>
 
             <div className="test-footer">
               <div className="test-price">
                 <span className="price-label">Total Cost:</span>
                 <span className="price-value">
                   <FaRupeeSign />{" "}
-                  {testDetails.totalCost.toLocaleString("en-IN")}
+                  {testDetails.totalCost?.toLocaleString("en-IN") || "0"}
                 </span>
+              </div>
+              <div className="test-availability">
+                <FaCheckCircle className="availability-icon" />
+                <span>Available in your area</span>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Booking Form Section */}
-        <form className="booking-form" onSubmit={handleSubmit} noValidate>
+        <motion.form
+          className="booking-form"
+          onSubmit={handleSubmit}
+          noValidate
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <h2>
             <FaUser className="section-icon" /> Patient Information
           </h2>
@@ -292,10 +523,15 @@ const Book = () => {
               value={formData.fullName}
               onChange={handleChange}
               required
+              maxLength="100"
               className={formErrors.fullName ? "error" : ""}
+              aria-invalid={!!formErrors.fullName}
+              aria-describedby={
+                formErrors.fullName ? "fullName-error" : undefined
+              }
             />
             {formErrors.fullName && (
-              <span className="error-message">
+              <span className="error-message" id="fullName-error">
                 <FaInfoCircle /> {formErrors.fullName}
               </span>
             )}
@@ -315,9 +551,11 @@ const Book = () => {
                 onChange={handleChange}
                 required
                 className={formErrors.email ? "error" : ""}
+                aria-invalid={!!formErrors.email}
+                aria-describedby={formErrors.email ? "email-error" : undefined}
               />
               {formErrors.email && (
-                <span className="error-message">
+                <span className="error-message" id="email-error">
                   <FaInfoCircle /> {formErrors.email}
                 </span>
               )}
@@ -335,9 +573,11 @@ const Book = () => {
                 onChange={handleChange}
                 required
                 className={formErrors.phone ? "error" : ""}
+                aria-invalid={!!formErrors.phone}
+                aria-describedby={formErrors.phone ? "phone-error" : undefined}
               />
               {formErrors.phone && (
-                <span className="error-message">
+                <span className="error-message" id="phone-error">
                   <FaInfoCircle /> {formErrors.phone}
                 </span>
               )}
@@ -356,6 +596,7 @@ const Book = () => {
                       value={gender}
                       checked={formData.gender === gender}
                       onChange={handleChange}
+                      aria-invalid={!!formErrors.gender}
                     />
                     <span className="radio-custom"></span>
                     <span>
@@ -392,9 +633,13 @@ const Book = () => {
                 required
                 min={minDate}
                 className={formErrors.preferredDate ? "error" : ""}
+                aria-invalid={!!formErrors.preferredDate}
+                aria-describedby={
+                  formErrors.preferredDate ? "date-error" : undefined
+                }
               />
               {formErrors.preferredDate && (
-                <span className="error-message">
+                <span className="error-message" id="date-error">
                   <FaInfoCircle /> {formErrors.preferredDate}
                 </span>
               )}
@@ -403,23 +648,29 @@ const Book = () => {
               <label htmlFor="preferredTime">
                 <FaClock className="input-icon" /> Preferred Time
               </label>
-              <select
-                id="preferredTime"
-                name="preferredTime"
-                value={formData.preferredTime}
-                onChange={handleChange}
-                required
-                className={formErrors.preferredTime ? "error" : ""}
-              >
-                <option value="">Select time slot</option>
-                {timeSlots.map((slot) => (
-                  <option key={slot.value} value={slot.value}>
-                    {slot.label}
-                  </option>
-                ))}
-              </select>
+              <div className="select-wrapper">
+                <select
+                  id="preferredTime"
+                  name="preferredTime"
+                  value={formData.preferredTime}
+                  onChange={handleChange}
+                  required
+                  className={formErrors.preferredTime ? "error" : ""}
+                  aria-invalid={!!formErrors.preferredTime}
+                  aria-describedby={
+                    formErrors.preferredTime ? "time-error" : undefined
+                  }
+                >
+                  <option value="">Select time slot</option>
+                  {timeSlots.map((slot) => (
+                    <option key={slot.value} value={slot.value}>
+                      {slot.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {formErrors.preferredTime && (
-                <span className="error-message">
+                <span className="error-message" id="time-error">
                   <FaInfoCircle /> {formErrors.preferredTime}
                 </span>
               )}
@@ -431,7 +682,9 @@ const Book = () => {
           </h2>
 
           <div className="form-group">
-            <label htmlFor="street">Street Address</label>
+            <label htmlFor="street">
+              <FaHome className="input-icon" /> Street Address
+            </label>
             <input
               type="text"
               id="street"
@@ -440,10 +693,13 @@ const Book = () => {
               value={formData.street}
               onChange={handleChange}
               required
+              maxLength="200"
               className={formErrors.street ? "error" : ""}
+              aria-invalid={!!formErrors.street}
+              aria-describedby={formErrors.street ? "street-error" : undefined}
             />
             {formErrors.street && (
-              <span className="error-message">
+              <span className="error-message" id="street-error">
                 <FaInfoCircle /> {formErrors.street}
               </span>
             )}
@@ -460,10 +716,13 @@ const Book = () => {
                 value={formData.city}
                 onChange={handleChange}
                 required
+                maxLength="50"
                 className={formErrors.city ? "error" : ""}
+                aria-invalid={!!formErrors.city}
+                aria-describedby={formErrors.city ? "city-error" : undefined}
               />
               {formErrors.city && (
-                <span className="error-message">
+                <span className="error-message" id="city-error">
                   <FaInfoCircle /> {formErrors.city}
                 </span>
               )}
@@ -478,10 +737,13 @@ const Book = () => {
                 value={formData.state}
                 onChange={handleChange}
                 required
+                maxLength="50"
                 className={formErrors.state ? "error" : ""}
+                aria-invalid={!!formErrors.state}
+                aria-describedby={formErrors.state ? "state-error" : undefined}
               />
               {formErrors.state && (
-                <span className="error-message">
+                <span className="error-message" id="state-error">
                   <FaInfoCircle /> {formErrors.state}
                 </span>
               )}
@@ -500,38 +762,51 @@ const Book = () => {
                 onChange={handleChange}
                 required
                 className={formErrors.zip ? "error" : ""}
+                aria-invalid={!!formErrors.zip}
+                aria-describedby={formErrors.zip ? "zip-error" : undefined}
               />
               {formErrors.zip && (
-                <span className="error-message">
+                <span className="error-message" id="zip-error">
                   <FaInfoCircle /> {formErrors.zip}
                 </span>
               )}
             </div>
             <div className="form-group">
               <label htmlFor="country">Country</label>
-              <select
-                id="country"
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                required
-                className={formErrors.country ? "error" : ""}
-              >
-                <option value="">Select country</option>
-                {[
-                  "United States",
-                  "Canada",
-                  "United Kingdom",
-                  "Australia",
-                  "India",
-                ].map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
+              <div className="select-wrapper">
+                <select
+                  id="country"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  required
+                  className={formErrors.country ? "error" : ""}
+                  aria-invalid={!!formErrors.country}
+                  aria-describedby={
+                    formErrors.country ? "country-error" : undefined
+                  }
+                >
+                  <option value="">Select country</option>
+                  {[
+                    "United States",
+                    "Canada",
+                    "United Kingdom",
+                    "Australia",
+                    "India",
+                    "Germany",
+                    "France",
+                    "Japan",
+                    "Singapore",
+                    "United Arab Emirates",
+                  ].map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {formErrors.country && (
-                <span className="error-message">
+                <span className="error-message" id="country-error">
                   <FaInfoCircle /> {formErrors.country}
                 </span>
               )}
@@ -548,7 +823,11 @@ const Book = () => {
               placeholder="Any special instructions, allergies, or notes for our staff..."
               value={formData.notes}
               onChange={handleChange}
+              maxLength="500"
             ></textarea>
+            <div className="char-count">
+              {formData.notes.length}/500 characters
+            </div>
           </div>
 
           <div className="form-footer">
@@ -559,14 +838,24 @@ const Book = () => {
                 appointment. We adhere to strict privacy policies.
               </p>
             </div>
+
+            {apiError && (
+              <div className="form-error">
+                <FaExclamationTriangle /> {apiError}
+              </div>
+            )}
+
             <div className="form-actions">
               <button
                 type="submit"
                 className="submit-btn"
                 disabled={isSubmitting}
+                aria-busy={isSubmitting}
               >
                 {isSubmitting ? (
-                  "Processing..."
+                  <>
+                    <FaSpinner className="spinner" /> Processing...
+                  </>
                 ) : (
                   <>
                     Confirm Booking <FaArrowRight className="btn-icon" />
@@ -575,49 +864,49 @@ const Book = () => {
               </button>
             </div>
           </div>
-        </form>
+        </motion.form>
       </div>
 
       <BottomNavigation />
 
-      <style jsx>{`
+      <style>{`
         :root {
-          --primary-color: #6a0dad;
-          --primary-light: #8b5cf6;
-          --primary-lighter: #c4b5fd;
-          --primary-dark: #4c1d95;
-          --primary-darker: #3b0764;
-          --secondary-color: #64748b;
-          --secondary-light: #e2e8f0;
+          --primary-color: #5e35b1;
+          --primary-light: #7c4dff;
+          --primary-lighter: #b388ff;
+          --primary-dark: #4527a0;
+          --primary-darker: #311b92;
+          --secondary-color: #546e7a;
+          --secondary-light: #eceff1;
           --light-color: #f8fafc;
-          --dark-color: #1e293b;
-          --success-color: #10b981;
-          --success-light: #d1fae5;
-          --warning-color: #f59e0b;
-          --error-color: #ef4444;
-          --error-light: #fee2e2;
-          --border-radius: 10px;
-          --border-radius-lg: 16px;
-          --border-radius-xl: 24px;
-          --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-            0 2px 4px -1px rgba(0, 0, 0, 0.06);
-          --box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-            0 4px 6px -2px rgba(0, 0, 0, 0.05);
-          --box-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-          --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          --dark-color: #263238;
+          --success-color: #00c853;
+          --success-light: #b9f6ca;
+          --warning-color: #ff9100;
+          --error-color: #ff3d00;
+          --error-light: #ffcdd2;
+          --border-radius: 8px;
+          --border-radius-lg: 12px;
+          --border-radius-xl: 16px;
+          --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          --box-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+          --box-shadow-xl: 0 10px 15px rgba(0, 0, 0, 0.1);
+          --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
           box-sizing: border-box;
+          margin: 0;
+          padding: 0;
         }
 
         .book-container {
           max-width: 1200px;
           margin: 0 auto;
           padding: 0 1rem 6rem;
-          font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: "Outfit", sans-serif;
           color: var(--dark-color);
+          line-height: 1.6;
         }
 
         /* Header Section */
@@ -629,7 +918,7 @@ const Book = () => {
             var(--primary-color)
           );
           color: white;
-          padding: 2rem;
+          padding: 3rem 2rem;
           border-radius: 0 0 var(--border-radius-xl) var(--border-radius-xl);
           position: relative;
           overflow: hidden;
@@ -637,7 +926,7 @@ const Book = () => {
           align-items: center;
           justify-content: space-between;
           min-height: 220px;
-          box-shadow: var(--box-shadow-lg);
+          box-shadow: var(--box-shadow-xl);
         }
 
         .book-header::before {
@@ -653,6 +942,38 @@ const Book = () => {
         .header-content {
           max-width: 600px;
           z-index: 2;
+        }
+
+        .header-illustration {
+          position: relative;
+          width: 300px;
+          height: 200px;
+          z-index: 1;
+        }
+
+        .illustration-circle {
+          position: absolute;
+          width: 150px;
+          height: 150px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.1);
+          top: 50%;
+          right: 0;
+          transform: translateY(-50%);
+        }
+
+        .illustration-dots {
+          position: absolute;
+          width: 100px;
+          height: 100px;
+          background: radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.2) 2px,
+            transparent 2px
+          );
+          background-size: 20px 20px;
+          top: 20px;
+          right: 50px;
         }
 
         .book-header h1 {
@@ -702,7 +1023,6 @@ const Book = () => {
           align-items: center;
           gap: 1rem;
           margin: 1rem;
-          animation: fadeIn 0.5s ease-out;
           border-left: 4px solid var(--success-color);
           box-shadow: var(--box-shadow);
         }
@@ -721,17 +1041,6 @@ const Book = () => {
           margin: 0;
           font-size: 0.9rem;
           opacity: 0.9;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
         }
 
         /* Main Content Layout */
@@ -843,21 +1152,49 @@ const Book = () => {
           line-height: 1.5;
         }
 
-        .test-benefits {
-          background: #f5f3ff;
-          padding: 1.5rem;
-          border-radius: var(--border-radius);
+        /* Accordion Styles */
+        .accordion-section {
           margin-bottom: 2rem;
         }
 
-        .test-benefits h4 {
-          margin-top: 0;
-          margin-bottom: 1rem;
-          color: var(--primary-dark);
+        .accordion-item {
+          margin-bottom: 0.5rem;
+          border-radius: var(--border-radius);
+          overflow: hidden;
+          border: 1px solid var(--secondary-light);
         }
 
-        .test-benefits p {
-          margin: 0;
+        .accordion-header {
+          width: 100%;
+          padding: 1rem 1.5rem;
+          background: #f8fafc;
+          border: none;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 600;
+          color: var(--dark-color);
+          cursor: pointer;
+          transition: var(--transition);
+        }
+
+        .accordion-header:hover {
+          background: #f1f5f9;
+        }
+
+        .accordion-header[aria-expanded="true"] {
+          background: var(--primary-light);
+          color: white;
+        }
+
+        .accordion-content {
+          padding: 0 1.5rem;
+          background: white;
+          overflow: hidden;
+        }
+
+        .accordion-content p {
+          padding: 1rem 0;
           color: var(--secondary-color);
           line-height: 1.6;
         }
@@ -908,6 +1245,63 @@ const Book = () => {
           border: 1px solid var(--secondary-light);
         }
 
+        .form-progress {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 2.5rem;
+          position: relative;
+        }
+
+        .form-progress::before {
+          content: "";
+          position: absolute;
+          top: 15px;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: var(--secondary-light);
+          z-index: 0;
+        }
+
+        .progress-step {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          z-index: 1;
+        }
+
+        .progress-step.active .step-number {
+          background: var(--primary-color);
+          color: white;
+          border-color: var(--primary-color);
+        }
+
+        .progress-step.active .step-label {
+          color: var(--primary-color);
+          font-weight: 600;
+        }
+
+        .step-number {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: white;
+          border: 2px solid var(--secondary-light);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          transition: var(--transition);
+        }
+
+        .step-label {
+          font-size: 0.85rem;
+          color: var(--secondary-color);
+          transition: var(--transition);
+        }
+
         .booking-form h2 {
           color: var(--primary-dark);
           margin: 0 0 1.75rem;
@@ -925,7 +1319,6 @@ const Book = () => {
           margin-bottom: 1.75rem;
           position: relative;
         }
-
         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -965,7 +1358,7 @@ const Book = () => {
           font-size: 1rem;
           transition: var(--transition);
           background: #f8fafc;
-          font-family: inherit;
+          font-family: "Outfit", sans-serif;
           color: var(--dark-color);
         }
 

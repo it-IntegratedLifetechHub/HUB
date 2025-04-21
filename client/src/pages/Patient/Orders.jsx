@@ -20,7 +20,7 @@ const Orders = () => {
       id: 1,
       testName: "Complete Blood Count (CBC)",
       bookedDate: "10 January 2025",
-      status: "pending", // 'completed', 'in-lab', 'pending'
+      status: "in-lab", // 'completed', 'in-lab', 'pending'
       estimatedCompletion: "12 January 2025",
       collectionType: "Home Collection",
       collectionTime: "9:00 AM - 11:00 AM",
@@ -58,7 +58,7 @@ const Orders = () => {
       id: 3,
       testName: "Lipid Profile",
       bookedDate: "12 January 2025",
-      status: "in-lab",
+      status: "pending",
       estimatedCompletion: "15 January 2025",
       collectionType: "Home Collection",
       collectionTime: "2:00 PM - 4:00 PM",
@@ -469,7 +469,7 @@ const Orders = () => {
           margin: 0 auto;
           padding: 20px;
           padding-bottom: 100px;
-          font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: "Outfit", sans-serif;
         }
 
         .page-title {
