@@ -490,10 +490,6 @@ const Book = () => {
                   {testDetails.totalCost?.toLocaleString("en-IN") || "0"}
                 </span>
               </div>
-              <div className="test-availability">
-                <FaCheckCircle className="availability-icon" />
-                <span>Available in your area</span>
-              </div>
             </div>
           </div>
         </motion.div>

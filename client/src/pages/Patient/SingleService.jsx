@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import * as BiIcons from "react-icons/bi";
 import * as FaIcons from "react-icons/fa";
 import * as GiIcons from "react-icons/gi";
@@ -16,9 +16,8 @@ import {
   FaBookmark,
   FaRegBookmark,
   FaArrowLeft,
+  FaRupeeSign,
 } from "react-icons/fa";
-import { FaRupeeSign } from "react-icons/fa";
-
 import BottomNavigation from "../../components/BottomNav";
 
 const SingleService = () => {
@@ -42,6 +41,7 @@ const SingleService = () => {
     return FaFlask;
   }
 
+  const navigate = useNavigate();
   const { categoryId } = useParams();
   const [category, setCategory] = useState(null);
   const [tests, setTests] = useState([]);
@@ -97,6 +97,20 @@ const SingleService = () => {
     localStorage.setItem("savedTests", JSON.stringify(newSavedTests));
   };
 
+  const handleBookTest = (test) => {
+    navigate(`/booking/${categoryId}/test/${encodeURIComponent(test.name)}`, {
+      state: {
+        testDetails: {
+          name: test.name,
+          categoryId,
+          price: test.totalCost,
+          icon: test.icon,
+          ...test,
+        },
+      },
+    });
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -144,7 +158,6 @@ const SingleService = () => {
           <div className="service-icon">
             {React.createElement(getIconComponent(category.icon), { size: 50 })}
           </div>
-
           <h1>{category.name}</h1>
           <p className="service-description">
             {category.description || "Explore recommended tests below"}
@@ -203,7 +216,6 @@ const SingleService = () => {
                   </div>
                 </div>
               </div>
-
               <div className="card-footer">
                 <Link
                   to={`/category/${categoryId}/test/${encodeURIComponent(
@@ -213,13 +225,18 @@ const SingleService = () => {
                 >
                   View Details
                 </Link>
-                <button className="book-button">Book Now</button>
+                <button
+                  className="book-button"
+                  onClick={() => handleBookTest(test)}
+                  aria-label={`Book ${test.name} test`}
+                >
+                  Book Now
+                </button>
               </div>
             </div>
           );
         })}
       </div>
-
       <BottomNavigation />
 
       <style jsx="true">{`
