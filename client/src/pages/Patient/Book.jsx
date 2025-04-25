@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+
+import * as BiIcons from "react-icons/bi";
+import * as FaIcons from "react-icons/fa";
+import * as GiIcons from "react-icons/gi";
+import * as PiIcons from "react-icons/pi";
+import * as MdIcons from "react-icons/md";
+import * as RiIcons from "react-icons/ri";
+import * as FiIcons from "react-icons/fi";
+import * as AiIcons from "react-icons/ai";
+
 import {
   FaUser,
   FaEnvelope,
@@ -25,6 +35,25 @@ import BottomNavigation from "../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Book = () => {
+  function getIconComponent(iconName) {
+    const iconSets = [
+      MdIcons,
+      FaIcons,
+      BiIcons,
+      GiIcons,
+      PiIcons,
+      RiIcons,
+      FiIcons,
+      AiIcons,
+    ];
+
+    for (const iconSet of iconSets) {
+      if (iconSet[iconName]) {
+        return iconSet[iconName];
+      }
+    }
+    return FaFlask;
+  }
   const { categoryId, test: testNameParam } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -381,7 +410,9 @@ const Book = () => {
           <div className="test-header">
             <h2>
               <span className="test-icon">
-                <FaFlask />
+                {React.createElement(getIconComponent(testDetails.icon), {
+                  size: 50,
+                })}{" "}
               </span>
               {testDetails.name}
             </h2>
