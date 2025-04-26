@@ -49,11 +49,7 @@ const orderSchema = new Schema(
     },
     payment: {
       type: String,
-      enum: {
-        values: ["pending", "COD", "completed", "cancelled"],
-        message: "{VALUE} is not a valid status",
-      },
-      default: "pending",
+      enum: ["pending", "COD", "completed", "cancelled"], // "COD" in uppercase
     },
 
     // Appointment Details

@@ -479,9 +479,10 @@ const validateBooking = [
     next();
   }
 ];
-
 router.post('/api/orders', validateBooking, async (req, res) => {
   try {
+    console.log('Submitted data:', JSON.stringify(req.body, null, 2));
+
     const {
       testDetails,
       fullName,
@@ -495,7 +496,8 @@ router.post('/api/orders', validateBooking, async (req, res) => {
       city,
       state,
       zip,
-      country
+      country,
+      payment // Added payment field from request body
     } = req.body;
 
     // Validate required fields
@@ -523,6 +525,7 @@ router.post('/api/orders', validateBooking, async (req, res) => {
         phone,
         gender
       },
+      payment: payment || 'pending', // Use provided payment or default to 'pending'
       appointment: {
         preferredDate: new Date(preferredDate),
         preferredTime,
@@ -535,8 +538,7 @@ router.post('/api/orders', validateBooking, async (req, res) => {
         zip,
         country
       },
-      status: 'pending',
-      createdAt: new Date()
+      status: 'pending'
     });
 
     const savedOrder = await order.save();

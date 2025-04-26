@@ -86,6 +86,7 @@ const Book = () => {
     notes: "",
     preferredDate: "",
     preferredTime: "",
+    paymentMethod: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -220,7 +221,6 @@ const Book = () => {
       }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
@@ -236,8 +236,19 @@ const Book = () => {
       return;
     }
 
-    setIsSubmitting(true);
+    if (formData.paymentMethod === "online") {
+      navigate("/payment", {
+        state: {
+          testDetails,
+          formData,
+          amount: testDetails.totalCost,
+        },
+      });
+      return;
+    }
 
+    // For COD, proceed with booking
+    setIsSubmitting(true);
     try {
       const orderData = {
         testDetails: {
@@ -250,8 +261,48 @@ const Book = () => {
           specialist: testDetails.specialist,
           whyToTake: testDetails.whyToTake,
         },
+        payment: formData.paymentMethod === "cod" ? "COD" : "pending",
         ...formData,
       };
+
+      // Console.log the complete order data in a readable format
+      console.log("Submitting order data:", {
+        "Test Details": {
+          "Test Name": orderData.testDetails.name,
+          "Category ID": orderData.testDetails.categoryId,
+          "Total Cost": orderData.testDetails.totalCost,
+          Description: orderData.testDetails.description,
+          Preparation: orderData.testDetails.preparation,
+          "Turnaround Time": orderData.testDetails.turnaroundTime,
+          Specialist: orderData.testDetails.specialist,
+          "Why To Take": orderData.testDetails.whyToTake,
+        },
+        "Patient Information": {
+          "Full Name": orderData.fullName,
+          Email: orderData.email,
+          Phone: orderData.phone,
+          Gender: orderData.gender,
+        },
+        "Appointment Details": {
+          "Preferred Date": orderData.preferredDate,
+          "Preferred Time": orderData.preferredTime,
+          Notes: orderData.notes || "No notes provided",
+        },
+        "Address Information": {
+          Street: orderData.street,
+          City: orderData.city,
+          State: orderData.state,
+          ZIP: orderData.zip,
+          Country: orderData.country,
+        },
+        "Payment Information": {
+          "Payment Method": orderData.paymentMethod,
+          "Payment Status": orderData.payment,
+        },
+        "System Information": {
+          "Submission Time": new Date().toISOString(),
+        },
+      });
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/orders`,
@@ -839,6 +890,60 @@ const Book = () => {
               )}
             </div>
           </div>
+          <div className="payment-method-section">
+            <h2>
+              <FaIcons.FaMoneyBillWave className="section-icon" /> Payment
+              Method
+            </h2>
+            <div className="payment-options">
+              <label
+                className={`payment-option ${
+                  formData.paymentMethod === "cod" ? "selected" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="cod"
+                  checked={formData.paymentMethod === "cod"}
+                  onChange={() =>
+                    setFormData({ ...formData, paymentMethod: "cod" })
+                  }
+                />
+                <div className="payment-option-content">
+                  <FaIcons.FaBoxOpen className="payment-icon" />
+                  <span>Cash on Delivery (COD)</span>
+                  <small>Pay when the technician arrives</small>
+                </div>
+              </label>
+
+              <label
+                className={`payment-option ${
+                  formData.paymentMethod === "online" ? "selected" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="online"
+                  checked={formData.paymentMethod === "online"}
+                  onChange={() =>
+                    setFormData({ ...formData, paymentMethod: "online" })
+                  }
+                />
+                <div className="payment-option-content">
+                  <FaIcons.FaCreditCard className="payment-icon" />
+                  <span>Online Payment</span>
+                  <small>Pay securely now with card/UPI/net banking</small>
+                </div>
+              </label>
+            </div>
+            {formErrors.paymentMethod && (
+              <span className="error-message">
+                <FaInfoCircle /> {formErrors.paymentMethod}
+              </span>
+            )}
+          </div>
 
           <div className="form-group">
             <label htmlFor="notes">
@@ -882,6 +987,10 @@ const Book = () => {
                 {isSubmitting ? (
                   <>
                     <FaSpinner className="spinner" /> Processing...
+                  </>
+                ) : formData.paymentMethod === "online" ? (
+                  <>
+                    Proceed to Payment <FaArrowRight className="btn-icon" />
                   </>
                 ) : (
                   <>
@@ -1686,6 +1795,55 @@ const Book = () => {
             right: 10px;
           }
         }
+          .payment-method-section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f9f9f9;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+
+.payment-options {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.payment-option {
+  flex: 1;
+  padding: 1.5rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-option.selected {
+  border-color: #4CAF50;
+  background-color: #f0fff0;
+}
+
+.payment-option input {
+  display: none;
+}
+
+.payment-option-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.payment-icon {
+  font-size: 2rem;
+  color: #4CAF50;
+}
+
+.payment-option small {
+  color: #666;
+  font-size: 0.8rem;
+  text-align: center;
+}
       `}</style>
     </div>
   );

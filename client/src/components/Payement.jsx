@@ -17,7 +17,35 @@ import PhonePay from "../assets/phonepay.png";
 import Paytm from "../assets/Paytm.png";
 import GPAY from "../assets/GPAY.webp";
 
-const Payment = () => {
+const Payment = ({
+  amount = 135.0,
+  onPaymentSuccess,
+  savedCards = [
+    { id: 1, type: "VISA", last4: "3456", expiry: "05/25", bank: "HDFC Bank" },
+    {
+      id: 2,
+      type: "MASTERCARD",
+      last4: "7890",
+      expiry: "12/24",
+      bank: "ICICI Bank",
+    },
+  ],
+  upiApps = [
+    { id: 1, name: "Google Pay", icon: GPAY, color: "#5F30E2" },
+    { id: 2, name: "PhonePe", icon: PhonePay, color: "#5F259F" },
+    { id: 3, name: "Paytm", icon: Paytm, color: "#00BAF2" },
+  ],
+  banks = [
+    { id: 1, name: "State Bank of India", code: "SBI", logo: "SBI" },
+    { id: 2, name: "HDFC Bank", code: "HDFC", logo: "HDFC" },
+    { id: 3, name: "ICICI Bank", code: "ICICI", logo: "ICICI" },
+    { id: 4, name: "Axis Bank", code: "AXIS", logo: "AXIS" },
+    { id: 5, name: "Kotak Mahindra Bank", code: "KOTAK", logo: "KOTAK" },
+    { id: 6, name: "Punjab National Bank", code: "PNB", logo: "PNB" },
+    { id: 7, name: "Bank of Baroda", code: "BOB", logo: "BOB" },
+    { id: 8, name: "Canara Bank", code: "CANARA", logo: "CANARA" },
+  ],
+}) => {
   const [activeTab, setActiveTab] = useState("card");
   const [cardDetails, setCardDetails] = useState({
     number: "",
@@ -76,47 +104,47 @@ const Payment = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsProcessing(true);
+
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false);
       setPaymentSuccess(true);
+
+      // Prepare payment data based on active tab
+      let paymentData = {};
+      if (activeTab === "card") {
+        paymentData = {
+          method: "card",
+          details: {
+            ...cardDetails,
+            type: cardType,
+            selectedCard: selectedCard
+              ? savedCards.find((card) => card.id === selectedCard)
+              : null,
+          },
+        };
+      } else if (activeTab === "upi") {
+        paymentData = {
+          method: "upi",
+          details: { upiId },
+        };
+      } else if (activeTab === "netbanking") {
+        paymentData = {
+          method: "netbanking",
+          details: { bankSearch },
+        };
+      }
+
+      // Call the success callback with payment data
+      if (onPaymentSuccess) {
+        onPaymentSuccess({
+          amount,
+          transactionId: `RZP${Math.floor(Math.random() * 10000000000)}`,
+          date: new Date().toISOString(),
+          ...paymentData,
+        });
+      }
     }, 2000);
-  };
-
-  const savedCards = [
-    { id: 1, type: "VISA", last4: "3456", expiry: "05/25", bank: "HDFC Bank" },
-    {
-      id: 2,
-      type: "MASTERCARD",
-      last4: "7890",
-      expiry: "12/24",
-      bank: "ICICI Bank",
-    },
-  ];
-
-  const upiApps = [
-    { id: 1, name: "Google Pay", icon: GPAY, color: "#5F30E2" },
-    { id: 2, name: "PhonePe", icon: PhonePay, color: "#5F259F" },
-    { id: 3, name: "Paytm", icon: Paytm, color: "#00BAF2" },
-  ];
-
-  const banks = [
-    { id: 1, name: "State Bank of India", code: "SBI", logo: "SBI" },
-    { id: 2, name: "HDFC Bank", code: "HDFC", logo: "HDFC" },
-    { id: 3, name: "ICICI Bank", code: "ICICI", logo: "ICICI" },
-    { id: 4, name: "Axis Bank", code: "AXIS", logo: "AXIS" },
-    { id: 5, name: "Kotak Mahindra Bank", code: "KOTAK", logo: "KOTAK" },
-    { id: 6, name: "Punjab National Bank", code: "PNB", logo: "PNB" },
-    { id: 7, name: "Bank of Baroda", code: "BOB", logo: "BOB" },
-    { id: 8, name: "Canara Bank", code: "CANARA", logo: "CANARA" },
-  ];
-
-  const filteredBanks = banks.filter((bank) =>
-    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
-  );
-
-  const toggleSavedCards = () => {
-    setShowSavedCards(!showSavedCards);
   };
 
   const resetPayment = () => {
@@ -132,6 +160,14 @@ const Payment = () => {
     setCardType("");
   };
 
+  const filteredBanks = banks.filter((bank) =>
+    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+  );
+
+  const toggleSavedCards = () => {
+    setShowSavedCards(!showSavedCards);
+  };
+
   const renderCardIcon = () => {
     switch (cardType) {
       case "visa":
@@ -145,42 +181,286 @@ const Payment = () => {
     }
   };
 
+  const SuccessScreen = () => (
+    <div className="success-screen">
+      <div className="success-icon">
+        <BsCheckCircleFill />
+      </div>
+      <h2>Payment Successful!</h2>
+      <p className="success-message">
+        Your payment of ₹{amount.toFixed(2)} has been processed successfully. A
+        receipt has been sent to your email.
+      </p>
+      <div className="order-details">
+        <div className="detail-item">
+          <span>Transaction ID:</span>
+          <span>RZP{Math.floor(Math.random() * 10000000000)}</span>
+        </div>
+        <div className="detail-item">
+          <span>Date:</span>
+          <span>{new Date().toLocaleDateString()}</span>
+        </div>
+        <div className="detail-item">
+          <span>Payment Method:</span>
+          <span>
+            {activeTab === "card"
+              ? "Credit/Debit Card"
+              : activeTab === "upi"
+              ? "UPI"
+              : "Net Banking"}
+          </span>
+        </div>
+      </div>
+      <button className="continue-button" onClick={resetPayment}>
+        Make Another Payment
+      </button>
+    </div>
+  );
+
+  const CardPaymentForm = () => (
+    <form className="card-form" onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label>Card Number</label>
+        <div className="input-with-icon">
+          {renderCardIcon()}
+          <input
+            type="text"
+            name="number"
+            value={cardDetails.number}
+            onChange={handleInputChange}
+            placeholder="1234 5678 9012 3456"
+            maxLength="19"
+            className="card-input"
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Cardholder Name</label>
+        <input
+          type="text"
+          name="name"
+          value={cardDetails.name}
+          onChange={handleInputChange}
+          placeholder="Name as on card"
+          className="name-input"
+        />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Expiry Date</label>
+          <input
+            type="text"
+            name="expiry"
+            value={cardDetails.expiry}
+            onChange={handleInputChange}
+            placeholder="MM/YY"
+            maxLength="5"
+            className="expiry-input"
+          />
+        </div>
+        <div className="form-group">
+          <label>CVV</label>
+          <div className="input-with-icon">
+            <input
+              type="password"
+              name="cvv"
+              value={cardDetails.cvv}
+              onChange={handleInputChange}
+              placeholder="•••"
+              maxLength="3"
+              className="cvv-input"
+            />
+            <FaLock className="lock-icon" />
+          </div>
+        </div>
+      </div>
+
+      {savedCards.length > 0 && (
+        <div className="saved-cards">
+          <div className="saved-card-header" onClick={toggleSavedCards}>
+            <div className="header-content">
+              <span>Saved Cards</span>
+              <span className="cards-count">{savedCards.length} cards</span>
+            </div>
+            <FaChevronDown
+              className={`chevron ${showSavedCards ? "up" : "down"}`}
+            />
+          </div>
+          {showSavedCards && (
+            <div className="saved-cards-list">
+              {savedCards.map((card) => (
+                <div
+                  key={card.id}
+                  className={`saved-card-item ${
+                    selectedCard === card.id ? "selected" : ""
+                  }`}
+                  onClick={() => setSelectedCard(card.id)}
+                >
+                  <div className="card-top">
+                    <div
+                      className={`card-type ${
+                        card.type === "VISA" ? "visa" : "mastercard"
+                      }`}
+                    >
+                      {card.type === "VISA" ? (
+                        <RiVisaLine />
+                      ) : (
+                        <RiMastercardLine />
+                      )}
+                    </div>
+                    <div className="card-bank">{card.bank}</div>
+                  </div>
+                  <div className="card-middle">
+                    <div className="card-number">
+                      •••• •••• •••• {card.last4}
+                    </div>
+                    <div className="card-expiry">Exp: {card.expiry}</div>
+                  </div>
+                  {selectedCard === card.id && (
+                    <FaCheck className="check-icon" />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        className={`pay-button ${isProcessing ? "processing" : ""}`}
+        disabled={
+          !cardDetails.number ||
+          !cardDetails.name ||
+          !cardDetails.expiry ||
+          !cardDetails.cvv ||
+          isProcessing
+        }
+      >
+        {isProcessing ? (
+          <>
+            <div className="spinner"></div>
+            Processing...
+          </>
+        ) : (
+          <>
+            <FaRupeeSign className="rupee-icon" />
+            Pay ₹{amount.toFixed(2)}
+          </>
+        )}
+      </button>
+    </form>
+  );
+
+  const UPIPaymentForm = () => (
+    <div className="upi-method">
+      <div className="form-group">
+        <label>Enter your UPI ID</label>
+        <div className="upi-id-input">
+          <input
+            type="text"
+            value={upiId}
+            onChange={(e) => setUpiId(e.target.value)}
+            placeholder="name@upi"
+            className="upi-input"
+          />
+          <button
+            type="button"
+            className="verify-button"
+            disabled={!upiId.includes("@")}
+          >
+            Verify
+          </button>
+        </div>
+      </div>
+
+      <div className="section-title">Or pay directly via</div>
+
+      <div className="upi-apps">
+        {upiApps.map((app) => (
+          <div
+            key={app.id}
+            className="upi-app"
+            style={{
+              backgroundColor: `${app.color}10`,
+              borderColor: `${app.color}30`,
+            }}
+          >
+            <div
+              className="app-icon-container"
+              style={{ backgroundColor: app.color }}
+            >
+              <img src={app.icon} alt={app.name} className="app-icon" />
+            </div>
+            <span className="app-name">{app.name}</span>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        className="pay-button upi-pay-button"
+        onClick={handleSubmit}
+        disabled={!upiId}
+      >
+        Pay via UPI
+      </button>
+    </div>
+  );
+
+  const NetBankingForm = () => (
+    <div className="netbanking-method">
+      <div className="form-group">
+        <label>Search for your bank</label>
+        <div className="bank-search">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            value={bankSearch}
+            onChange={(e) => setBankSearch(e.target.value)}
+            placeholder="e.g. HDFC, SBI, ICICI"
+            className="bank-search-input"
+          />
+        </div>
+      </div>
+
+      <div className="bank-list-container">
+        <div className="bank-list">
+          {filteredBanks.length > 0 ? (
+            filteredBanks.map((bank) => (
+              <div key={bank.id} className="bank-item">
+                <div className="bank-logo">{bank.logo}</div>
+                <div className="bank-details">
+                  <div className="bank-name">{bank.name}</div>
+                  <div className="bank-code">{bank.code}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="no-banks-found">
+              <div className="no-results-icon">🔍</div>
+              <div>No banks found matching your search</div>
+            </div>
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        className="pay-button"
+        onClick={handleSubmit}
+        disabled={!bankSearch}
+      >
+        Pay via Net Banking
+      </button>
+    </div>
+  );
+
   return (
     <div className="payment-container">
       {paymentSuccess ? (
-        <div className="success-screen">
-          <div className="success-icon">
-            <BsCheckCircleFill />
-          </div>
-          <h2>Payment Successful!</h2>
-          <p className="success-message">
-            Your payment of ₹135.00 has been processed successfully. A receipt
-            has been sent to your email.
-          </p>
-          <div className="order-details">
-            <div className="detail-item">
-              <span>Transaction ID:</span>
-              <span>RZP1234567890</span>
-            </div>
-            <div className="detail-item">
-              <span>Date:</span>
-              <span>{new Date().toLocaleDateString()}</span>
-            </div>
-            <div className="detail-item">
-              <span>Payment Method:</span>
-              <span>
-                {activeTab === "card"
-                  ? "Credit/Debit Card"
-                  : activeTab === "upi"
-                  ? "UPI"
-                  : "Net Banking"}
-              </span>
-            </div>
-          </div>
-          <button className="continue-button" onClick={resetPayment}>
-            Make Another Payment
-          </button>
-        </div>
+        <SuccessScreen />
       ) : (
         <>
           <div className="payment-header">
@@ -195,7 +475,7 @@ const Payment = () => {
               <span>Amount to pay:</span>
               <div className="amount">
                 <FaRupeeSign className="rupee-icon" />
-                <span>135.00</span>
+                <span>{amount.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -228,258 +508,9 @@ const Payment = () => {
             </div>
 
             <div className="payment-content">
-              {activeTab === "card" && (
-                <form className="card-form" onSubmit={handleSubmit}>
-                  <div className="form-group">
-                    <label>Card Number</label>
-                    <div className="input-with-icon">
-                      {renderCardIcon()}
-                      <input
-                        type="text"
-                        name="number"
-                        value={cardDetails.number}
-                        onChange={handleInputChange}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength="19"
-                        className="card-input"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Cardholder Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={cardDetails.name}
-                      onChange={handleInputChange}
-                      placeholder="Name as on card"
-                      className="name-input"
-                    />
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Expiry Date</label>
-                      <input
-                        type="text"
-                        name="expiry"
-                        value={cardDetails.expiry}
-                        onChange={handleInputChange}
-                        placeholder="MM/YY"
-                        maxLength="5"
-                        className="expiry-input"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>CVV</label>
-                      <div className="input-with-icon">
-                        <input
-                          type="password"
-                          name="cvv"
-                          value={cardDetails.cvv}
-                          onChange={handleInputChange}
-                          placeholder="•••"
-                          maxLength="3"
-                          className="cvv-input"
-                        />
-                        <FaLock className="lock-icon" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {savedCards.length > 0 && (
-                    <div className="saved-cards">
-                      <div
-                        className="saved-card-header"
-                        onClick={toggleSavedCards}
-                      >
-                        <div className="header-content">
-                          <span>Saved Cards</span>
-                          <span className="cards-count">
-                            {savedCards.length} cards
-                          </span>
-                        </div>
-                        <FaChevronDown
-                          className={`chevron ${
-                            showSavedCards ? "up" : "down"
-                          }`}
-                        />
-                      </div>
-                      {showSavedCards && (
-                        <div className="saved-cards-list">
-                          {savedCards.map((card) => (
-                            <div
-                              key={card.id}
-                              className={`saved-card-item ${
-                                selectedCard === card.id ? "selected" : ""
-                              }`}
-                              onClick={() => setSelectedCard(card.id)}
-                            >
-                              <div className="card-top">
-                                <div
-                                  className={`card-type ${
-                                    card.type === "VISA" ? "visa" : "mastercard"
-                                  }`}
-                                >
-                                  {card.type === "VISA" ? (
-                                    <RiVisaLine />
-                                  ) : (
-                                    <RiMastercardLine />
-                                  )}
-                                </div>
-                                <div className="card-bank">{card.bank}</div>
-                              </div>
-                              <div className="card-middle">
-                                <div className="card-number">
-                                  •••• •••• •••• {card.last4}
-                                </div>
-                                <div className="card-expiry">
-                                  Exp: {card.expiry}
-                                </div>
-                              </div>
-                              {selectedCard === card.id && (
-                                <FaCheck className="check-icon" />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    className={`pay-button ${isProcessing ? "processing" : ""}`}
-                    disabled={
-                      !cardDetails.number ||
-                      !cardDetails.name ||
-                      !cardDetails.expiry ||
-                      !cardDetails.cvv ||
-                      isProcessing
-                    }
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="spinner"></div>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <FaRupeeSign className="rupee-icon" />
-                        Pay ₹135.00
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-
-              {activeTab === "upi" && (
-                <div className="upi-method">
-                  <div className="form-group">
-                    <label>Enter your UPI ID</label>
-                    <div className="upi-id-input">
-                      <input
-                        type="text"
-                        value={upiId}
-                        onChange={(e) => setUpiId(e.target.value)}
-                        placeholder="name@upi"
-                        className="upi-input"
-                      />
-                      <button
-                        type="button"
-                        className="verify-button"
-                        disabled={!upiId.includes("@")}
-                      >
-                        Verify
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="section-title">Or pay directly via</div>
-
-                  <div className="upi-apps">
-                    {upiApps.map((app) => (
-                      <div
-                        key={app.id}
-                        className="upi-app"
-                        style={{
-                          backgroundColor: `${app.color}10`,
-                          borderColor: `${app.color}30`,
-                        }}
-                      >
-                        <div
-                          className="app-icon-container"
-                          style={{ backgroundColor: app.color }}
-                        >
-                          <img
-                            src={app.icon}
-                            alt={app.name}
-                            className="app-icon"
-                          />
-                        </div>
-                        <span className="app-name">{app.name}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="pay-button upi-pay-button"
-                    onClick={handleSubmit}
-                    disabled={!upiId}
-                  >
-                    Pay via UPI
-                  </button>
-                </div>
-              )}
-
-              {activeTab === "netbanking" && (
-                <div className="netbanking-method">
-                  <div className="form-group">
-                    <label>Search for your bank</label>
-                    <div className="bank-search">
-                      <FaSearch className="search-icon" />
-                      <input
-                        type="text"
-                        value={bankSearch}
-                        onChange={(e) => setBankSearch(e.target.value)}
-                        placeholder="e.g. HDFC, SBI, ICICI"
-                        className="bank-search-input"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bank-list-container">
-                    <div className="bank-list">
-                      {filteredBanks.length > 0 ? (
-                        filteredBanks.map((bank) => (
-                          <div key={bank.id} className="bank-item">
-                            <div className="bank-logo">{bank.logo}</div>
-                            <div className="bank-details">
-                              <div className="bank-name">{bank.name}</div>
-                              <div className="bank-code">{bank.code}</div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="no-banks-found">
-                          <div className="no-results-icon">🔍</div>
-                          <div>No banks found matching your search</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="pay-button"
-                    onClick={handleSubmit}
-                    disabled={!bankSearch}
-                  >
-                    Pay via Net Banking
-                  </button>
-                </div>
-              )}
+              {activeTab === "card" && <CardPaymentForm />}
+              {activeTab === "upi" && <UPIPaymentForm />}
+              {activeTab === "netbanking" && <NetBankingForm />}
             </div>
 
             <div className="payment-footer">
