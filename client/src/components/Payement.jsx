@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCreditCard,
   FaRupeeSign,
@@ -7,17 +7,16 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaCheck,
-  FaSearch,
 } from "react-icons/fa";
 import { CiBank } from "react-icons/ci";
 import {
   BsCheckCircleFill,
   BsCreditCard,
   BsThreeDotsVertical,
-  BsArrowLeft,
 } from "react-icons/bs";
 import { RiVisaLine, RiMastercardLine, RiCloseLine } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
 import RazorLogo from "../assets/razorpay.png";
 import UPI from "../assets/UPI.svg";
 import PhonePay from "../assets/phonepay.png";
@@ -25,26 +24,23 @@ import Paytm from "../assets/Paytm.png";
 import GPAY from "../assets/GPAY.webp";
 
 const Payment = ({
-  amount = 135.0,
-  savedCards = [
-    {
-      id: 1,
-      type: "VISA",
-      last4: "3456",
-      expiry: "05/25",
-      bank: "HDFC Bank",
-      default: true,
-    },
-    {
-      id: 2,
-      type: "MASTERCARD",
-      last4: "7890",
-      expiry: "12/24",
-      bank: "ICICI Bank",
-      default: false,
-    },
-  ],
+  defaultAmount = 0,
+  defaultSavedCards = [],
+  defaultTestDetails = null,
+  defaultFormData = null,
 }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Get data from navigation state or props
+  const {
+    amount = defaultAmount,
+    savedCards = defaultSavedCards,
+    testDetails = defaultTestDetails,
+    formData = defaultFormData,
+    orderId = null,
+  } = location.state || {};
+
   const [activeTab, setActiveTab] = useState("card");
   const [showSavedCards, setShowSavedCards] = useState(false);
   const [cardNumber, setCardNumber] = useState("");
@@ -58,6 +54,7 @@ const Payment = ({
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showBankList, setShowBankList] = useState(false);
   const [selectedBank, setSelectedBank] = useState(null);
+  const [paymentDetails, setPaymentDetails] = useState(null);
 
   const banks = [
     { id: 1, code: "HDFC", name: "HDFC Bank" },
@@ -116,7 +113,7 @@ const Payment = ({
     { id: 4, name: "BHIM UPI", icon: UPI },
   ];
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (activeTab === "card" && (!cardNumber || !cardName || !expiry || !cvv)) {
       return;
     }
@@ -128,11 +125,64 @@ const Payment = ({
     }
 
     setProcessingPayment(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      setProcessingPayment(false);
+
+    try {
+      // Simulate API call with actual data from props/state
+      const paymentData = {
+        orderId,
+        amount,
+        paymentMethod:
+          activeTab === "card"
+            ? "card"
+            : activeTab === "upi"
+            ? "upi"
+            : "netbanking",
+        paymentDetails:
+          activeTab === "card"
+            ? {
+                cardLast4: cardNumber.slice(-4),
+                cardName,
+                expiry,
+              }
+            : activeTab === "upi"
+            ? {
+                upiId: showUpiApps ? "app_selected" : upiId,
+              }
+            : {
+                bank: selectedBank.name,
+                bankCode: selectedBank.code,
+              },
+        testDetails,
+        formData,
+      };
+
+      // In a real app, you would call your payment API here
+      // const response = await processPayment(paymentData);
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Set payment details for success screen
+      setPaymentDetails({
+        paymentId: `RZP${Math.floor(Math.random() * 10000000)}`,
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString(),
+        method:
+          activeTab === "card"
+            ? "Credit/Debit Card"
+            : activeTab === "upi"
+            ? "UPI Payment"
+            : "Net Banking",
+        ...paymentData,
+      });
+
       setPaymentSuccess(true);
-    }, 2000);
+    } catch (error) {
+      console.error("Payment failed:", error);
+      // Handle error state here
+    } finally {
+      setProcessingPayment(false);
+    }
   };
 
   const resetPayment = () => {
@@ -144,6 +194,7 @@ const Payment = ({
     setSelectedCard(null);
     setUpiId("");
     setSelectedBank(null);
+    setPaymentDetails(null);
   };
 
   const selectBank = (bank) => {
@@ -160,11 +211,16 @@ const Payment = ({
     return true;
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   return (
     <div className="payment-container">
       {!paymentSuccess ? (
         <>
           <div className="payment-header">
+            <button className="back-button" onClick={handleBack}></button>
             <div className="logo-container">
               <img src={RazorLogo} alt="Razorpay" className="logo" />
               <div className="secure-badge">
@@ -178,6 +234,9 @@ const Payment = ({
             <div className="amount">
               <FaRupeeSign className="rupee-icon" /> {amount.toFixed(2)}
             </div>
+            {orderId && (
+              <div className="order-reference">Order ID: {orderId}</div>
+            )}
           </div>
 
           <div className="payment-tabs">
@@ -519,27 +578,27 @@ const Payment = ({
               Your payment has been processed successfully.
             </p>
             <div className="success-details">
+              {orderId && (
+                <div className="detail-item">
+                  <span>Order ID</span>
+                  <span>{orderId}</span>
+                </div>
+              )}
               <div className="detail-item">
                 <span>Payment ID</span>
-                <span>RZP{Math.floor(Math.random() * 10000000)}</span>
+                <span>{paymentDetails?.paymentId}</span>
               </div>
               <div className="detail-item">
                 <span>Date</span>
-                <span>{new Date().toLocaleDateString()}</span>
+                <span>{paymentDetails?.date}</span>
               </div>
               <div className="detail-item">
                 <span>Time</span>
-                <span>{new Date().toLocaleTimeString()}</span>
+                <span>{paymentDetails?.time}</span>
               </div>
               <div className="detail-item">
                 <span>Method</span>
-                <span>
-                  {activeTab === "card"
-                    ? "Credit/Debit Card"
-                    : activeTab === "upi"
-                    ? "UPI Payment"
-                    : "Net Banking"}
-                </span>
+                <span>{paymentDetails?.method}</span>
               </div>
             </div>
             <motion.button
