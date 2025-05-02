@@ -31,6 +31,7 @@ import {
 } from "react-icons/fa";
 import BottomNavigation from "../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
 
 const Book = () => {
   function getIconComponent(iconName) {
@@ -52,7 +53,6 @@ const Book = () => {
     }
     return FaFlask;
   }
-
   const { categoryId, test: testNameParam } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -99,7 +99,6 @@ const Book = () => {
   useEffect(() => {
     if (!state?.testDetails) {
       setLoadingTestDetails(true);
-      // Simulate API call delay
       setTimeout(() => {
         try {
           const categoryTests = MOCK_TESTS[categoryId] || [];
@@ -107,10 +106,7 @@ const Book = () => {
             (t) => t.name === decodedTestName
           );
 
-          if (!foundTest) {
-            throw new Error("Test not found");
-          }
-
+          if (!foundTest) throw new Error("Test not found");
           setTestDetails(foundTest);
         } catch (err) {
           console.error("Error loading test details:", err);
@@ -131,74 +127,51 @@ const Book = () => {
     const phoneRegex = /^[0-9]{10,15}$/;
     const zipRegex = /^[0-9]{5,6}(?:-[0-9]{4})?$/;
 
-    if (!formData.fullName.trim()) {
-      errors.fullName = "Full name is required";
-    } else if (formData.fullName.length > 100) {
+    if (!formData.fullName.trim()) errors.fullName = "Full name is required";
+    else if (formData.fullName.length > 100)
       errors.fullName = "Name must be less than 100 characters";
-    }
 
-    if (!formData.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!emailRegex.test(formData.email)) {
+    if (!formData.email.trim()) errors.email = "Email is required";
+    else if (!emailRegex.test(formData.email))
       errors.email = "Invalid email address";
-    }
 
-    if (!formData.phone.trim()) {
-      errors.phone = "Phone number is required";
-    } else if (!phoneRegex.test(formData.phone)) {
+    if (!formData.phone.trim()) errors.phone = "Phone number is required";
+    else if (!phoneRegex.test(formData.phone))
       errors.phone = "Invalid phone number (10-15 digits)";
-    }
 
-    if (!formData.gender) {
-      errors.gender = "Please select a gender";
-    }
+    if (!formData.gender) errors.gender = "Please select a gender";
 
-    if (!formData.preferredDate) {
-      errors.preferredDate = "Date is required";
-    } else {
+    if (!formData.preferredDate) errors.preferredDate = "Date is required";
+    else {
       const selectedDate = new Date(formData.preferredDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
+      if (selectedDate < today)
         errors.preferredDate = "Date must be today or in the future";
-      }
     }
 
-    if (!formData.preferredTime) {
-      errors.preferredTime = "Time slot is required";
-    }
+    if (!formData.preferredTime) errors.preferredTime = "Time slot is required";
 
-    if (!formData.street.trim()) {
-      errors.street = "Street address is required";
-    } else if (formData.street.length > 200) {
+    if (!formData.street.trim()) errors.street = "Street address is required";
+    else if (formData.street.length > 200)
       errors.street = "Address must be less than 200 characters";
-    }
 
-    if (!formData.city.trim()) {
-      errors.city = "City is required";
-    } else if (formData.city.length > 50) {
+    if (!formData.city.trim()) errors.city = "City is required";
+    else if (formData.city.length > 50)
       errors.city = "City name must be less than 50 characters";
-    }
 
-    if (!formData.state.trim()) {
-      errors.state = "State is required";
-    } else if (formData.state.length > 50) {
+    if (!formData.state.trim()) errors.state = "State is required";
+    else if (formData.state.length > 50)
       errors.state = "State name must be less than 50 characters";
-    }
 
-    if (!formData.zip.trim()) {
-      errors.zip = "ZIP code is required";
-    } else if (!zipRegex.test(formData.zip)) {
+    if (!formData.zip.trim()) errors.zip = "ZIP code is required";
+    else if (!zipRegex.test(formData.zip))
       errors.zip = "Invalid ZIP code format";
-    }
 
-    if (!formData.country) {
-      errors.country = "Country is required";
-    }
+    if (!formData.country) errors.country = "Country is required";
 
-    if (!formData.paymentMethod) {
+    if (!formData.paymentMethod)
       errors.paymentMethod = "Please select a payment method";
-    }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -206,45 +179,45 @@ const Book = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (formErrors[name])
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
 
-    if (formErrors[name]) {
-      setFormErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
+  const saveOrderToDatabase = async (orderData) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/orders`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to save order");
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error saving order:", error);
+      throw error;
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
 
     if (!validateForm()) {
       const firstError = Object.keys(formErrors).find((key) => formErrors[key]);
-      if (firstError) {
-        document.getElementById(firstError)?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
+      if (firstError)
+        document
+          .getElementById(firstError)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
-    if (formData.paymentMethod === "online") {
-      navigate("/payment", {
-        state: {
-          testDetails,
-          formData,
-          amount: testDetails.totalCost,
-        },
-      });
-      return;
-    }
-
-    // For COD, proceed with booking
     setIsSubmitting(true);
 
     try {
@@ -259,53 +232,56 @@ const Book = () => {
           specialist: testDetails.specialist,
           whyToTake: testDetails.whyToTake,
         },
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        gender: formData.gender,
-        preferredDate: formData.preferredDate,
-        preferredTime: formData.preferredTime,
-        notes: formData.notes,
-        street: formData.street,
-        city: formData.city,
-        state: formData.state,
-        zip: formData.zip,
-        country: formData.country,
-        paymentMethod: formData.paymentMethod,
+        ...formData,
+        paymentStatus: formData.paymentMethod === "online" ? "pending" : "cod",
+        amount: testDetails.totalCost,
       };
 
-      // ✅ Make the fetch call first
+      if (formData.paymentMethod === "online") {
+        const orderResponse = await saveOrderToDatabase(orderData);
+
+        navigate("/payment", {
+          state: {
+            orderId: orderResponse.id,
+            amount: testDetails.totalCost,
+            testDetails,
+            formData,
+          },
+          replace: true,
+        });
+        return;
+      }
+
+      // For COD payment
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/orders`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderData),
         }
       );
 
-      // ✅ Then parse the response
       const data = await response.json();
 
-      if (data.success) {
-        setIsSuccess(true);
-
-        setTimeout(() => {
-          navigate("/appointments", {
-            state: {
-              bookingSuccess: true,
-              bookingData: data.data,
-            },
-          });
-        }, 3000);
-      } else {
+      if (!response.ok)
         throw new Error(data.message || "Failed to create booking");
-      }
+
+      setIsSuccess(true);
+      toast.success("Booking created successfully!");
+
+      setTimeout(() => {
+        navigate("/appointments", {
+          state: { bookingSuccess: true, bookingData: data.data },
+          replace: true,
+        });
+      }, 2000);
     } catch (err) {
       console.error("Booking error:", err);
-      setApiError(err.message || "Failed to create booking. Please try again.");
+      setApiError(
+        err.message || "Failed to process your request. Please try again."
+      );
+      toast.error(err.message || "Failed to process your request");
     } finally {
       setIsSubmitting(false);
     }
