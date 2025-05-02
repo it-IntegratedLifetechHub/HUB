@@ -437,51 +437,95 @@ router.delete("/api/categories/:categoryId/tests/:testId", async (req, res) => {
   }
 });
 
-
-
 // Validation middleware
 const validateBooking = [
-  body('testDetails').exists().withMessage('Test details are required'),
-  body('testDetails.name').notEmpty().withMessage('Test name is required'),
-  body('testDetails.categoryId').notEmpty().withMessage('Category ID is required'),
-  body('testDetails.totalCost').isNumeric().withMessage('Total cost must be a number').custom(value => value > 0).withMessage('Total cost must be positive'),
+  body("testDetails").exists().withMessage("Test details are required"),
+  body("testDetails.name").notEmpty().withMessage("Test name is required"),
+  body("testDetails.categoryId")
+    .notEmpty()
+    .withMessage("Category ID is required"),
+  body("testDetails.totalCost")
+    .isNumeric()
+    .withMessage("Total cost must be a number")
+    .custom((value) => value > 0)
+    .withMessage("Total cost must be positive"),
 
-  body('fullName').trim().notEmpty().withMessage('Full name is required').isLength({ max: 100 }).withMessage('Name too long'),
-  body('email').trim().isEmail().withMessage('Invalid email address').normalizeEmail(),
-  body('phone').trim().isMobilePhone().withMessage('Invalid phone number'),
-  body('gender').isIn(['male', 'female', 'other', 'prefer-not-to-say']).withMessage('Invalid gender selection'),
+  body("fullName")
+    .trim()
+    .notEmpty()
+    .withMessage("Full name is required")
+    .isLength({ max: 100 })
+    .withMessage("Name too long"),
+  body("email")
+    .trim()
+    .isEmail()
+    .withMessage("Invalid email address")
+    .normalizeEmail(),
+  body("phone").trim().isMobilePhone().withMessage("Invalid phone number"),
+  body("gender")
+    .isIn(["male", "female", "other", "prefer-not-to-say"])
+    .withMessage("Invalid gender selection"),
 
-  body('preferredDate').isISO8601().withMessage('Invalid date format').custom(value => {
-    const selectedDate = new Date(value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDate >= today;
-  }).withMessage('Date must be today or in the future'),
-  body('preferredTime').notEmpty().withMessage('Time slot is required'),
+  body("preferredDate")
+    .isISO8601()
+    .withMessage("Invalid date format")
+    .custom((value) => {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return selectedDate >= today;
+    })
+    .withMessage("Date must be today or in the future"),
+  body("preferredTime").notEmpty().withMessage("Time slot is required"),
 
-  body('street').trim().notEmpty().withMessage('Street address is required').isLength({ max: 200 }).withMessage('Address too long'),
-  body('city').trim().notEmpty().withMessage('City is required').isLength({ max: 50 }).withMessage('City name too long'),
-  body('state').trim().notEmpty().withMessage('State is required').isLength({ max: 50 }).withMessage('State name too long'),
-  body('zip').trim().notEmpty().withMessage('ZIP code is required').isPostalCode('any').withMessage('Invalid ZIP code'),
-  body('country').trim().notEmpty().withMessage('Country is required').isLength({ max: 50 }).withMessage('Country name too long'),
+  body("street")
+    .trim()
+    .notEmpty()
+    .withMessage("Street address is required")
+    .isLength({ max: 200 })
+    .withMessage("Address too long"),
+  body("city")
+    .trim()
+    .notEmpty()
+    .withMessage("City is required")
+    .isLength({ max: 50 })
+    .withMessage("City name too long"),
+  body("state")
+    .trim()
+    .notEmpty()
+    .withMessage("State is required")
+    .isLength({ max: 50 })
+    .withMessage("State name too long"),
+  body("zip")
+    .trim()
+    .notEmpty()
+    .withMessage("ZIP code is required")
+    .isPostalCode("any")
+    .withMessage("Invalid ZIP code"),
+  body("country")
+    .trim()
+    .notEmpty()
+    .withMessage("Country is required")
+    .isLength({ max: 50 })
+    .withMessage("Country name too long"),
 
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        errors: errors.array().map(err => ({
-          field: err.param.includes('.') ? err.param.split('.')[1] : err.param,
-          message: err.msg
-        }))
+        errors: errors.array().map((err) => ({
+          field: err.param.includes(".") ? err.param.split(".")[1] : err.param,
+          message: err.msg,
+        })),
       });
     }
     next();
-  }
+  },
 ];
-router.post('/api/orders', validateBooking, async (req, res) => {
+router.post("/api/orders", validateBooking, async (req, res) => {
   try {
-    console.log('Submitted data:', JSON.stringify(req.body, null, 2));
+    console.log("Submitted data:", JSON.stringify(req.body, null, 2));
 
     const {
       testDetails,
@@ -497,14 +541,22 @@ router.post('/api/orders', validateBooking, async (req, res) => {
       state,
       zip,
       country,
-      payment // Added payment field from request body
+      paymentMethod, // Changed from payment to paymentMethod
     } = req.body;
 
     // Validate required fields
     if (!testDetails || !testDetails.name || !testDetails.categoryId) {
       return res.status(400).json({
         success: false,
-        message: 'Test details are required'
+        message: "Test details are required",
+      });
+    }
+
+    // Validate payment method
+    if (!paymentMethod || !["cod", "online"].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid payment method (cod/online) is required",
       });
     }
 
@@ -513,32 +565,37 @@ router.post('/api/orders', validateBooking, async (req, res) => {
         name: testDetails.name,
         categoryId: testDetails.categoryId,
         totalCost: testDetails.totalCost || 0,
-        description: testDetails.description || '',
-        preparation: testDetails.preparation || 'No special preparation needed',
-        turnaroundTime: testDetails.turnaroundTime || '24-48 hours',
-        specialist: testDetails.specialist || 'General Practitioner',
-        whyToTake: testDetails.whyToTake || ''
+        description: testDetails.description || "",
+        preparation: testDetails.preparation || "No special preparation needed",
+        turnaroundTime: testDetails.turnaroundTime || "24-48 hours",
+        specialist: testDetails.specialist || "General Practitioner",
+        whyToTake: testDetails.whyToTake || "",
       },
       patient: {
         fullName,
         email,
         phone,
-        gender
+        gender,
       },
-      payment: payment || 'pending', // Use provided payment or default to 'pending'
+      payment: {
+        method: paymentMethod, // Set payment method from request
+        status: paymentMethod === "online" ? "pending" : "pending", // Default status
+        // Note: For online payments, you might want to set this to 'completed'
+        // after successful payment processing
+      },
       appointment: {
         preferredDate: new Date(preferredDate),
         preferredTime,
-        notes: notes || undefined
+        notes: notes || undefined,
       },
       address: {
         street,
         city,
         state,
         zip,
-        country
+        country,
       },
-      status: 'pending'
+      status: "pending",
     });
 
     const savedOrder = await order.save();
@@ -546,124 +603,30 @@ router.post('/api/orders', validateBooking, async (req, res) => {
     res.status(201).json({
       success: true,
       data: savedOrder,
-      message: 'Booking confirmed successfully!'
+      message: "Booking confirmed successfully!",
     });
   } catch (err) {
-    console.error('Error creating order:', err);
+    console.error("Error creating order:", err);
 
     if (err.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: 'Order number conflict, please try again'
+        message: "Order number conflict, please try again",
       });
     }
 
-    if (err.name === 'ValidationError') {
-      const messages = Object.values(err.errors).map(val => val.message);
+    if (err.name === "ValidationError") {
+      const messages = Object.values(err.errors).map((val) => val.message);
       return res.status(400).json({
         success: false,
-        message: messages.join(', ')
+        message: messages.join(", "),
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to create booking. Please try again.'
+      message: "Failed to create booking. Please try again.",
     });
   }
 });
-// Get all orders (for admin dashboard) with pagination
-// router.get('/', async (req, res) => {
-//   try {
-//     const page = parseInt(req.query.page) || 1;
-//     const limit = parseInt(req.query.limit) || 10;
-//     const skip = (page - 1) * limit;
-
-//     const orders = await Order.find()
-//       .sort({ createdAt: -1 })
-//       .skip(skip)
-//       .limit(limit);
-
-//     const total = await Order.countDocuments();
-
-//     res.json({
-//       success: true,
-//       data: orders,
-//       meta: {
-//         page,
-//         limit,
-//         total,
-//         pages: Math.ceil(total / limit)
-//       }
-//     });
-//   } catch (err) {
-//     console.error('Error fetching orders:', err);
-//     res.status(500).json({ success: false, message: 'Failed to fetch orders' });
-//   }
-// });
-
-// Get order by ID
-// router.get('/:id', async (req, res) => {
-//   try {
-//     const order = await Order.findById(req.params.id);
-//     if (!order) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'Order not found'
-//       });
-//     }
-//     res.json({ success: true, data: order });
-//   } catch (err) {
-//     console.error('Error fetching order:', err);
-//     if (err.kind === 'ObjectId') {
-//       return res.status(400).json({ success: false, message: 'Invalid order ID' });
-//     }
-//     res.status(500).json({ success: false, message: 'Failed to fetch order' });
-//   }
-// });
-
-// Update order status
-// router.patch('/:id/status', [
-//   body('status').isIn(['confirmed', 'processing', 'completed', 'cancelled'])
-//     .withMessage('Invalid status value')
-// ], async (req, res) => {
-//   const errors = validationResult(req);
-//   if (!errors.isEmpty()) {
-//     return res.status(400).json({
-//       success: false,
-//       errors: errors.array().map(err => ({
-//         field: err.param,
-//         message: err.msg
-//       }))
-//     });
-//   }
-
-//   try {
-//     const { status } = req.body;
-//     const order = await Order.findByIdAndUpdate(
-//       req.params.id,
-//       { status, updatedAt: Date.now() },
-//       { new: true, runValidators: true }
-//     );
-
-//     if (!order) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'Order not found'
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       data: order,
-//       message: 'Order status updated successfully'
-//     });
-//   } catch (err) {
-//     console.error('Error updating order:', err);
-//     if (err.kind === 'ObjectId') {
-//       return res.status(400).json({ success: false, message: 'Invalid order ID' });
-//     }
-//     res.status(500).json({ success: false, message: 'Failed to update order' });
-//   }
-// });
 module.exports = router;

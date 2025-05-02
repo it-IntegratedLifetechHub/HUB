@@ -47,9 +47,26 @@ const orderSchema = new Schema(
         },
       },
     },
+
+    // Payment Information
     payment: {
-      type: String,
-      enum: ["pending", "COD", "completed", "cancelled"], // "COD" in uppercase
+      method: {
+        type: String,
+        required: [true, "Payment method is required"],
+        enum: {
+          values: ["cod", "online"],
+          message: "{VALUE} is not a valid payment method",
+        },
+      },
+      status: {
+        type: String,
+        required: [true, "Payment status is required"],
+        enum: {
+          values: ["pending", "completed", "canceled"],
+          message: "{VALUE} is not a valid payment status",
+        },
+        default: "pending",
+      },
     },
 
     // Appointment Details

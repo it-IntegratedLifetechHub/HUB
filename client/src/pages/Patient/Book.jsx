@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-
 import * as BiIcons from "react-icons/bi";
 import * as FaIcons from "react-icons/fa";
 import * as GiIcons from "react-icons/gi";
@@ -9,7 +8,6 @@ import * as MdIcons from "react-icons/md";
 import * as RiIcons from "react-icons/ri";
 import * as FiIcons from "react-icons/fi";
 import * as AiIcons from "react-icons/ai";
-
 import {
   FaUser,
   FaEnvelope,
@@ -54,6 +52,7 @@ const Book = () => {
     }
     return FaFlask;
   }
+
   const { categoryId, test: testNameParam } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -94,23 +93,19 @@ const Book = () => {
   const [formErrors, setFormErrors] = useState({});
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [apiError, setApiError] = useState(null);
-  const [loadingTestDetails, setLoadingTestDetails] = useState(
-    !state?.testDetails
-  );
+  const [loadingTestDetails, setLoadingTestDetails] = useState(false);
 
-  // Fetch test details if not passed in state
+  // Load test details from mock data
   useEffect(() => {
     if (!state?.testDetails) {
-      const fetchTestDetails = async () => {
+      setLoadingTestDetails(true);
+      // Simulate API call delay
+      setTimeout(() => {
         try {
-          const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/categories/${categoryId}/tests`
+          const categoryTests = MOCK_TESTS[categoryId] || [];
+          const foundTest = categoryTests.find(
+            (t) => t.name === decodedTestName
           );
-          if (!response.ok) {
-            throw new Error("Failed to fetch test details");
-          }
-          const data = await response.json();
-          const foundTest = data.data.find((t) => t.name === decodedTestName);
 
           if (!foundTest) {
             throw new Error("Test not found");
@@ -118,16 +113,14 @@ const Book = () => {
 
           setTestDetails(foundTest);
         } catch (err) {
-          console.error("Error fetching test details:", err);
+          console.error("Error loading test details:", err);
           setApiError(
             err.message || "Failed to load test details. Please try again."
           );
         } finally {
           setLoadingTestDetails(false);
         }
-      };
-
-      fetchTestDetails();
+      }, 500);
     }
   }, [categoryId, decodedTestName, state]);
 
@@ -203,6 +196,10 @@ const Book = () => {
       errors.country = "Country is required";
     }
 
+    if (!formData.paymentMethod) {
+      errors.paymentMethod = "Please select a payment method";
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -249,6 +246,7 @@ const Book = () => {
 
     // For COD, proceed with booking
     setIsSubmitting(true);
+
     try {
       const orderData = {
         testDetails: {
@@ -261,49 +259,22 @@ const Book = () => {
           specialist: testDetails.specialist,
           whyToTake: testDetails.whyToTake,
         },
-        payment: formData.paymentMethod === "cod" ? "COD" : "pending",
-        ...formData,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender,
+        preferredDate: formData.preferredDate,
+        preferredTime: formData.preferredTime,
+        notes: formData.notes,
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+        country: formData.country,
+        paymentMethod: formData.paymentMethod,
       };
 
-      // Console.log the complete order data in a readable format
-      console.log("Submitting order data:", {
-        "Test Details": {
-          "Test Name": orderData.testDetails.name,
-          "Category ID": orderData.testDetails.categoryId,
-          "Total Cost": orderData.testDetails.totalCost,
-          Description: orderData.testDetails.description,
-          Preparation: orderData.testDetails.preparation,
-          "Turnaround Time": orderData.testDetails.turnaroundTime,
-          Specialist: orderData.testDetails.specialist,
-          "Why To Take": orderData.testDetails.whyToTake,
-        },
-        "Patient Information": {
-          "Full Name": orderData.fullName,
-          Email: orderData.email,
-          Phone: orderData.phone,
-          Gender: orderData.gender,
-        },
-        "Appointment Details": {
-          "Preferred Date": orderData.preferredDate,
-          "Preferred Time": orderData.preferredTime,
-          Notes: orderData.notes || "No notes provided",
-        },
-        "Address Information": {
-          Street: orderData.street,
-          City: orderData.city,
-          State: orderData.state,
-          ZIP: orderData.zip,
-          Country: orderData.country,
-        },
-        "Payment Information": {
-          "Payment Method": orderData.paymentMethod,
-          "Payment Status": orderData.payment,
-        },
-        "System Information": {
-          "Submission Time": new Date().toISOString(),
-        },
-      });
-
+      // ✅ Make the fetch call first
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/orders`,
         {
@@ -315,27 +286,22 @@ const Book = () => {
         }
       );
 
-      const responseData = await response.json();
+      // ✅ Then parse the response
+      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          responseData.message ||
-            `Request failed with status ${response.status}`
-        );
-      }
-
-      if (responseData.success) {
+      if (data.success) {
         setIsSuccess(true);
+
         setTimeout(() => {
           navigate("/appointments", {
             state: {
               bookingSuccess: true,
-              bookingData: responseData.data,
+              bookingData: data.data,
             },
           });
         }, 3000);
       } else {
-        throw new Error(responseData.message || "Booking failed");
+        throw new Error(data.message || "Failed to create booking");
       }
     } catch (err) {
       console.error("Booking error:", err);
@@ -386,6 +352,7 @@ const Book = () => {
       </div>
     );
   }
+
   return (
     <div className="book-container">
       {/* Header with gradient background */}
@@ -1002,7 +969,6 @@ const Book = () => {
           </div>
         </motion.form>
       </div>
-
       <BottomNavigation />
 
       <style>{`
