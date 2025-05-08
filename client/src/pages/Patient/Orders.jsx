@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCheckCircle,
   FaFlask,
@@ -10,70 +10,51 @@ import {
   FaInfoCircle,
   FaUserNurse,
   FaMapMarkerAlt,
+  FaSpinner,
+  FaChevronDown,
+  FaChevronUp,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import BottomNavigation from "../../components/BottomNav";
+import { toast } from "react-toastify";
 
 const Orders = () => {
-  // Sample order data - in a real app this would come from an API
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      testName: "Complete Blood Count (CBC)",
-      bookedDate: "10 January 2025",
-      status: "in-lab", // 'completed', 'in-lab', 'pending'
-      estimatedCompletion: "12 January 2025",
-      collectionType: "Home Collection",
-      collectionTime: "9:00 AM - 11:00 AM",
-      phlebotomist: {
-        name: "Dr. Smith",
-        id: "PHLEB-123",
-        contact: "+1 (555) 123-4567",
-      },
-      notes: "Fasting required for 8 hours before test",
-      reportUrl: "#",
-      testDetails: {
-        preparation: "Fasting required",
-        duration: "5-10 minutes",
-        risks: "Minimal (slight bruising possible)",
-      },
-    },
-    {
-      id: 2,
-      testName: "Thyroid Function Test",
-      bookedDate: "8 January 2025",
-      status: "completed",
-      completedDate: "10 January 2025",
-      collectionType: "Lab Visit",
-      collectionTime: "Completed at 10:30 AM",
-      reportReady: true,
-      reportUrl: "#",
-      notes: "Report available for download",
-      testDetails: {
-        preparation: "No special preparation",
-        duration: "5 minutes",
-        risks: "Minimal",
-      },
-    },
-    {
-      id: 3,
-      testName: "Lipid Profile",
-      bookedDate: "12 January 2025",
-      status: "pending",
-      estimatedCompletion: "15 January 2025",
-      collectionType: "Home Collection",
-      collectionTime: "2:00 PM - 4:00 PM",
-      notes: "12-hour fasting required",
-      reportUrl: "#",
-      testDetails: {
-        preparation: "12-hour fasting",
-        duration: "5 minutes",
-        risks: "Minimal",
-      },
-    },
-  ]);
-
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [activeTab, setActiveTab] = useState("recent"); // 'recent' or 'completed'
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const userData = JSON.parse(localStorage.getItem("user"));
+
+        if (!userData?.id) {
+          throw new Error("User not authenticated");
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/orders/user/${userData.id}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch orders");
+        }
+
+        const data = await response.json();
+        setOrders(data);
+      } catch (error) {
+        toast.error(error.message);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const toggleOrderDetails = (orderId) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
@@ -134,30 +115,70 @@ const Orders = () => {
   };
 
   const downloadReport = (orderId) => {
-    // In a real app, this would trigger the download
-    console.log(`Downloading report for order ${orderId}`);
-    // window.location.href = orders.find(o => o.id === orderId).reportUrl;
+    const order = orders.find((o) => o._id === orderId);
+    if (order?.reportUrl) {
+      window.open(order.reportUrl, "_blank");
+    } else {
+      toast.info("Report not available yet");
+    }
   };
 
   const contactSupport = () => {
-    // In a real app, this would open a chat/phone interface
-    console.log("Contacting support");
+    window.location.href = "tel:+18001234567";
   };
 
-  // Filter orders based on active tab
-  const filteredOrders = orders.filter((order) => {
-    if (activeTab === "completed") {
-      return order.status === "completed";
-    } else {
-      return order.status !== "completed";
-    }
-  });
+  // Filter and search orders
+  const filteredOrders = orders
+    .filter((order) => {
+      if (activeTab === "completed") {
+        return order.status === "completed";
+      } else {
+        return order.status !== "completed";
+      }
+    })
+    .filter((order) =>
+      order.test.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+  const formatDate = (dateString) => {
+    const options = { day: "numeric", month: "long", year: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return "N/A";
+    return timeString.replace(/([0-9]{1,2}):([0-9]{2})/, (match, hh, mm) => {
+      const hour = parseInt(hh, 10);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${mm} ${ampm}`;
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <FaSpinner className="spinner" />
+        <p>Loading your orders...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="orders-container">
-      <h1 className="page-title">My Test Orders</h1>
+      <div className="page-header">
+        <h1 className="page-title">My Test Orders</h1>
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Search tests..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+      </div>
 
-      {/* Enhanced Toggle for Recent/Completed orders */}
       <div className="toggle-container">
         <div className="toggle-wrapper">
           <input
@@ -173,23 +194,6 @@ const Orders = () => {
               activeTab === "recent" ? "active" : ""
             }`}
           >
-            <span className="toggle-icon">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
             <span className="toggle-label">Recent</span>
             {activeTab === "recent" && <div className="active-indicator"></div>}
           </label>
@@ -207,40 +211,23 @@ const Orders = () => {
               activeTab === "completed" ? "active" : ""
             }`}
           >
-            <span className="toggle-icon">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
             <span className="toggle-label">Completed</span>
             {activeTab === "completed" && (
               <div className="active-indicator"></div>
             )}
           </label>
-
-          <div className="toggle-bg"></div>
         </div>
       </div>
 
       {filteredOrders.length === 0 ? (
         <div className="empty-state">
-          <img
-            src="/images/no-orders.svg"
-            alt="No orders"
-            className="empty-image"
-          />
+          <div className="empty-icon">
+            {activeTab === "completed" ? (
+              <FaCheckCircle />
+            ) : (
+              <FaExclamationTriangle />
+            )}
+          </div>
           <h3>
             {activeTab === "completed"
               ? "No Completed Orders Found"
@@ -251,25 +238,26 @@ const Orders = () => {
               ? "You don't have any completed test orders yet."
               : "You don't have any recent test orders."}
           </p>
-          {activeTab === "completed" && (
-            <button
-              className="primary-button"
-              onClick={() => setActiveTab("recent")}
-            >
-              View Recent Orders
+          {searchTerm && (
+            <button className="clear-search" onClick={() => setSearchTerm("")}>
+              Clear search
             </button>
           )}
         </div>
       ) : (
         <div className="orders-list">
           {filteredOrders.map((order) => (
-            <div key={order.id} className={`order-card ${order.status}`}>
+            <div key={order._id} className={`order-card ${order.status}`}>
               <div className="card-header">
                 <div className="test-info">
-                  <h2 className="test-name">{order.testName}</h2>
-                  <p className="collection-type">
-                    <FaMapMarkerAlt /> {order.collectionType}
-                  </p>
+                  <h2 className="test-name">{order.test.name}</h2>
+                  <div className="order-meta">
+                    <p className="collection-type">
+                      <FaMapMarkerAlt />{" "}
+                      {order.appointment.collectionType || "Lab Visit"}
+                    </p>
+                    <p className="order-id">Order #{order._id.slice(-6)}</p>
+                  </div>
                 </div>
                 <span className={`status-badge ${order.status}`}>
                   {order.status === "completed"
@@ -285,7 +273,9 @@ const Orders = () => {
                   <FaCalendarAlt className="detail-icon" />
                   <div>
                     <p className="detail-label">Booked Date</p>
-                    <p className="detail-value">{order.bookedDate}</p>
+                    <p className="detail-value">
+                      {formatDate(order.createdAt)}
+                    </p>
                   </div>
                 </div>
 
@@ -294,7 +284,11 @@ const Orders = () => {
                     <FaCheckCircle className="detail-icon" />
                     <div>
                       <p className="detail-label">Completed Date</p>
-                      <p className="detail-value">{order.completedDate}</p>
+                      <p className="detail-value">
+                        {order.completedAt
+                          ? formatDate(order.completedAt)
+                          : "N/A"}
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -307,7 +301,9 @@ const Orders = () => {
                           : "Scheduled Date"}
                       </p>
                       <p className="detail-value">
-                        {order.estimatedCompletion || order.bookedDate}
+                        {order.appointment.preferredDate
+                          ? formatDate(order.appointment.preferredDate)
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -321,21 +317,11 @@ const Orders = () => {
                         ? "Collection Time"
                         : "Scheduled Time"}
                     </p>
-                    <p className="detail-value">{order.collectionTime}</p>
+                    <p className="detail-value">
+                      {formatTime(order.appointment.preferredTime)}
+                    </p>
                   </div>
                 </div>
-
-                {order.phlebotomist && (
-                  <div className="detail-item">
-                    <FaUserNurse className="detail-icon" />
-                    <div>
-                      <p className="detail-label">Phlebotomist</p>
-                      <p className="detail-value">
-                        {order.phlebotomist.name} ({order.phlebotomist.id})
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {order.notes && (
@@ -377,28 +363,24 @@ const Orders = () => {
                 </div>
               </div>
 
-              {expandedOrder === order.id && (
+              {expandedOrder === order._id && (
                 <div className="additional-details">
                   <h4>Test Details</h4>
                   <div className="details-grid">
                     <div>
                       <p className="detail-label">Preparation</p>
-                      <p>{order.testDetails.preparation}</p>
+                      <p>
+                        {order.test.preparation || "No special preparation"}
+                      </p>
                     </div>
                     <div>
                       <p className="detail-label">Duration</p>
-                      <p>{order.testDetails.duration}</p>
+                      <p>{order.test.turnaroundTime || "N/A"}</p>
                     </div>
                     <div>
-                      <p className="detail-label">Risks</p>
-                      <p>{order.testDetails.risks}</p>
+                      <p className="detail-label">Specialist</p>
+                      <p>{order.test.specialist || "General Practitioner"}</p>
                     </div>
-                    {order.phlebotomist?.contact && (
-                      <div>
-                        <p className="detail-label">Phlebotomist Contact</p>
-                        <p>{order.phlebotomist.contact}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -408,28 +390,40 @@ const Orders = () => {
                   <>
                     <button
                       className="action-button download"
-                      onClick={() => downloadReport(order.id)}
+                      onClick={() => downloadReport(order._id)}
                     >
                       <FaDownload /> Download Report
                     </button>
                     <button
                       className="action-button details"
-                      onClick={() => toggleOrderDetails(order.id)}
+                      onClick={() => toggleOrderDetails(order._id)}
                     >
-                      {expandedOrder === order.id
-                        ? "Hide Details"
-                        : "View Details"}
+                      {expandedOrder === order._id ? (
+                        <>
+                          <FaChevronUp /> Hide Details
+                        </>
+                      ) : (
+                        <>
+                          <FaChevronDown /> View Details
+                        </>
+                      )}
                     </button>
                   </>
                 ) : (
                   <>
                     <button
                       className="action-button details"
-                      onClick={() => toggleOrderDetails(order.id)}
+                      onClick={() => toggleOrderDetails(order._id)}
                     >
-                      {expandedOrder === order.id
-                        ? "Hide Details"
-                        : "View Details"}
+                      {expandedOrder === order._id ? (
+                        <>
+                          <FaChevronUp /> Hide Details
+                        </>
+                      ) : (
+                        <>
+                          <FaChevronDown /> View Details
+                        </>
+                      )}
                     </button>
                     <button
                       className="action-button contact"
@@ -444,9 +438,7 @@ const Orders = () => {
           ))}
         </div>
       )}
-
       <BottomNavigation />
-
       <style jsx="true">{`
         /* Color Variables */
         :root {
@@ -455,12 +447,14 @@ const Orders = () => {
           --secondary-color: #4a148c;
           --success-color: #2e7d32;
           --warning-color: #ed6c02;
+          --error-color: #d32f2f;
           --text-dark: #2d3748;
           --text-medium: #4a5568;
           --text-light: #718096;
           --border-radius: 12px;
           --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          --card-shadow: 0 2px 8px rgba(106, 13, 173, 0.08);
         }
 
         /* Base Styles */
@@ -472,12 +466,48 @@ const Orders = () => {
           font-family: "Outfit", sans-serif;
         }
 
+        .page-header {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          margin-bottom: 25px;
+        }
+
         .page-title {
           font-size: 28px;
           font-weight: 700;
-          margin-bottom: 25px;
+          margin: 0;
           color: var(--primary-color);
           text-align: center;
+        }
+
+        /* Search Bar */
+        .search-container {
+          width: 100%;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+
+        .search-input {
+          width: 100%;
+          padding: 12px 20px;
+          border: 1px solid #e2e8f0;
+          border-radius: 30px;
+          font-size: 16px;
+          background-color: white;
+          box-shadow: var(--box-shadow);
+          transition: var(--transition);
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23718096' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: 15px center;
+          background-size: 20px;
+          padding-left: 45px;
+        }
+
+        .search-input:focus {
+          outline: none;
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.1);
         }
 
         /* Enhanced Toggle Styles */
@@ -491,11 +521,12 @@ const Orders = () => {
         .toggle-wrapper {
           display: flex;
           position: relative;
-          background: #f8f5ff;
+          background: var(--bg-light);
           border-radius: 50px;
           padding: 6px;
-          box-shadow: 0 2px 10px rgba(106, 13, 173, 0.1);
-          border: 1px solid rgba(106, 13, 173, 0.1);
+          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+          border: 1px solid #e5e7eb;
+          background-clip: padding-box;
         }
 
         .toggle-wrapper input[type="radio"] {
@@ -518,14 +549,17 @@ const Orders = () => {
           min-width: 150px;
           color: var(--text-medium);
           font-weight: 600;
+          font-size: 15px;
         }
 
         .toggle-option:hover {
           color: var(--primary-color);
+          background: rgba(124, 58, 237, 0.05);
         }
 
         .toggle-option.active {
           color: white;
+          background-color: #5e0d97;
         }
 
         .toggle-icon {
@@ -544,11 +578,16 @@ const Orders = () => {
           left: 6px;
           height: calc(100% - 12px);
           width: calc(50% - 6px);
-          background: var(--primary-color);
+          background: linear-gradient(
+            135deg,
+            var(--primary-color),
+            var(--secondary-color)
+          );
           border-radius: 50px;
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           transform: translateX(${activeTab === "recent" ? "0" : "100%"});
-          box-shadow: 0 4px 6px rgba(106, 13, 173, 0.2);
+          box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);
+          z-index: 0;
         }
 
         .active-indicator {
@@ -561,8 +600,29 @@ const Orders = () => {
           background: white;
           border-radius: 3px;
           opacity: 0.8;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .toggle-option {
+            min-width: 120px;
+            padding: 10px 16px;
+            font-size: 14px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .toggle-wrapper {
+            width: 100%;
+          }
+
+          .toggle-option {
+            flex: 1;
+            min-width: auto;
+            padding: 10px 12px;
+          }
+        }
         /* Empty State */
         .empty-state {
           text-align: center;
@@ -570,40 +630,43 @@ const Orders = () => {
           background-color: #f9f9ff;
           border-radius: var(--border-radius);
           margin-top: 30px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .empty-icon {
+          font-size: 48px;
+          color: var(--primary-color);
+          margin-bottom: 20px;
+          opacity: 0.7;
         }
 
         .empty-state h3 {
           font-size: 22px;
           color: var(--text-dark);
-          margin: 20px 0 10px;
+          margin: 0 0 10px 0;
         }
 
         .empty-state p {
           color: var(--text-medium);
           margin-bottom: 20px;
+          max-width: 400px;
         }
 
-        .empty-image {
-          width: 150px;
-          height: auto;
-          opacity: 0.8;
-        }
-
-        .primary-button {
-          background-color: var(--primary-color);
-          color: white;
-          padding: 12px 24px;
+        .clear-search {
+          background: none;
           border: none;
-          border-radius: var(--border-radius);
+          color: var(--primary-color);
           font-weight: 600;
           cursor: pointer;
+          padding: 8px 16px;
+          border-radius: 20px;
           transition: var(--transition);
         }
 
-        .primary-button:hover {
-          background-color: var(--secondary-color);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(106, 13, 173, 0.3);
+        .clear-search:hover {
+          background-color: var(--primary-light);
         }
 
         /* Order List */
@@ -618,9 +681,11 @@ const Orders = () => {
           background: white;
           padding: 25px;
           border-radius: var(--border-radius);
-          box-shadow: var(--box-shadow);
+          box-shadow: var(--card-shadow);
           transition: var(--transition);
           border-left: 4px solid var(--primary-color);
+          position: relative;
+          overflow: hidden;
         }
 
         .order-card:hover {
@@ -660,6 +725,12 @@ const Orders = () => {
           margin: 0 0 5px 0;
         }
 
+        .order-meta {
+          display: flex;
+          gap: 15px;
+          align-items: center;
+        }
+
         .collection-type {
           display: flex;
           align-items: center;
@@ -667,6 +738,14 @@ const Orders = () => {
           font-size: 14px;
           color: var(--text-medium);
           margin: 0;
+        }
+
+        .order-id {
+          font-size: 13px;
+          color: var(--text-light);
+          background: #f5f5f5;
+          padding: 2px 8px;
+          border-radius: 10px;
         }
 
         .collection-type svg {
@@ -736,6 +815,7 @@ const Orders = () => {
           padding: 15px;
           border-radius: 10px;
           margin-bottom: 20px;
+          border-left: 3px solid var(--primary-color);
         }
 
         .notes-label {
@@ -856,17 +936,43 @@ const Orders = () => {
           padding: 15px;
           border-radius: var(--border-radius);
           margin: 15px 0;
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .additional-details h4 {
           margin: 0 0 15px 0;
           color: var(--primary-color);
+          font-size: 16px;
         }
 
         .details-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
           gap: 15px;
+        }
+
+        .details-grid div {
+          background: white;
+          padding: 12px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .details-grid .detail-label {
+          font-weight: 600;
+          margin-bottom: 8px;
+          color: var(--primary-color);
         }
 
         /* Action Buttons */
@@ -898,6 +1004,7 @@ const Orders = () => {
 
         .action-button.download:hover {
           background-color: var(--secondary-color);
+          transform: translateY(-2px);
         }
 
         .action-button.contact {
@@ -907,6 +1014,7 @@ const Orders = () => {
 
         .action-button.contact:hover {
           background-color: #e0ccff;
+          transform: translateY(-2px);
         }
 
         .action-button.details {
@@ -917,6 +1025,32 @@ const Orders = () => {
 
         .action-button.details:hover {
           background-color: var(--primary-light);
+          transform: translateY(-2px);
+        }
+
+        /* Loading State */
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 60vh;
+          color: var(--primary-color);
+        }
+
+        .spinner {
+          font-size: 40px;
+          animation: spin 1s linear infinite;
+          margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
         }
 
         /* Responsive Design */
@@ -966,6 +1100,16 @@ const Orders = () => {
           .toggle-icon {
             margin-right: 6px;
           }
+
+          .page-header {
+            gap: 15px;
+          }
+
+          .order-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+          }
         }
 
         @media (max-width: 480px) {
@@ -1001,6 +1145,16 @@ const Orders = () => {
 
           .toggle-icon {
             display: none;
+          }
+
+          .action-button {
+            padding: 10px 12px;
+            font-size: 13px;
+          }
+
+          .search-input {
+            padding: 10px 15px 10px 40px;
+            background-position: 12px center;
           }
         }
       `}</style>

@@ -719,6 +719,53 @@ router.post("/api/orders/:orderId/pay", async (req, res) => {
   }
 });
 
-module.exports = router;
+// Get all orders for a specific user
+router.get("/api/orders/user/:userId", async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.params.userId })
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .populate("test.categoryId", "name")
+      .lean();
+
+    if (!orders || orders.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Format the orders for the frontend
+    const formattedOrders = orders.map((order) => ({
+      _id: order._id,
+      status: order.status,
+      createdAt: order.createdAt,
+      completedAt: order.payment?.completedAt,
+      test: {
+        name: order.test.name,
+        preparation: order.test.preparation,
+        turnaroundTime: order.test.turnaroundTime,
+        specialist: order.test.specialist,
+        whyToTake: order.test.whyToTake,
+      },
+      appointment: {
+        preferredDate: order.appointment.preferredDate,
+        preferredTime: order.appointment.preferredTime,
+        collectionType: order.appointment.collectionType || "Lab Visit",
+        notes: order.appointment.notes,
+      },
+      payment: {
+        method: order.payment.method,
+        status: order.payment.status,
+        amount: order.payment.amount,
+      },
+      reportUrl: order.reportUrl,
+    }));
+
+    res.json(formattedOrders);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+  }
+});
 
 module.exports = router;
