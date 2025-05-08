@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   FaCreditCard,
   FaRupeeSign,
@@ -6,41 +7,30 @@ import {
   FaLock,
   FaChevronDown,
   FaChevronUp,
-  FaCheck,
 } from "react-icons/fa";
 import { CiBank } from "react-icons/ci";
-import {
-  BsCheckCircleFill,
-  BsCreditCard,
-  BsThreeDotsVertical,
-} from "react-icons/bs";
-import { RiVisaLine, RiMastercardLine, RiCloseLine } from "react-icons/ri";
+import { BsCheckCircleFill, BsCreditCard } from "react-icons/bs";
+import { RiVisaLine, RiMastercardLine } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import RazorLogo from "../assets/razorpay.png";
 import UPI from "../assets/UPI.svg";
 import PhonePay from "../assets/phonepay.png";
 import Paytm from "../assets/Paytm.png";
 import GPAY from "../assets/GPAY.webp";
 
-const Payment = ({
-  defaultAmount = 0,
-  defaultSavedCards = [],
-  defaultTestDetails = null,
-  defaultFormData = null,
-}) => {
+const Payment = () => {
+  const { orderId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Get data from navigation state or props
-  const {
-    amount = defaultAmount,
-    savedCards = defaultSavedCards,
-    testDetails = defaultTestDetails,
-    formData = defaultFormData,
-    orderId = null,
-  } = location.state || {};
+  // State for order details
+  const [amount, setAmount] = useState(0);
+  const [testDetails, setTestDetails] = useState(null);
+  const [formData, setFormData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Payment form state
   const [activeTab, setActiveTab] = useState("card");
   const [showSavedCards, setShowSavedCards] = useState(false);
   const [cardNumber, setCardNumber] = useState("");
@@ -56,6 +46,26 @@ const Payment = ({
   const [selectedBank, setSelectedBank] = useState(null);
   const [paymentDetails, setPaymentDetails] = useState(null);
 
+  // Sample saved cards data
+  const [savedCards] = useState([
+    {
+      id: 1,
+      type: "VISA",
+      last4: "4242",
+      bank: "HDFC Bank",
+      expiry: "12/25",
+      default: true,
+    },
+    {
+      id: 2,
+      type: "MASTERCARD",
+      last4: "5555",
+      bank: "ICICI Bank",
+      expiry: "06/24",
+      default: false,
+    },
+  ]);
+
   const banks = [
     { id: 1, code: "HDFC", name: "HDFC Bank" },
     { id: 2, code: "ICICI", name: "ICICI Bank" },
@@ -65,21 +75,123 @@ const Payment = ({
     { id: 6, code: "PNB", name: "Punjab National Bank" },
   ];
 
+  const upiApps = [
+    { id: 1, name: "Google Pay", icon: GPAY },
+    { id: 2, name: "PhonePe", icon: PhonePay },
+    { id: 3, name: "Paytm", icon: Paytm },
+    { id: 4, name: "BHIM UPI", icon: UPI },
+  ];
+
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/orders/${orderId}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch order details");
+        const data = await response.json();
+        setAmount(data.test.totalCost);
+        setTestDetails(data.test);
+        setFormData({
+          fullName: data.patient.fullName,
+          email: data.patient.email,
+          phone: data.patient.phone,
+        });
+      } catch (error) {
+        toast.error(error.message);
+        navigate("/");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (location.state) {
+      setAmount(location.state.amount);
+      setTestDetails(location.state.testDetails);
+      setFormData(location.state.formData);
+      setLoading(false);
+    } else {
+      fetchOrderDetails();
+    }
+  }, [orderId, location.state, navigate]);
+
+  const handlePayment = async () => {
+    if (
+      (activeTab === "card" && (!cardNumber || !cardName || !expiry || !cvv)) ||
+      (activeTab === "upi" && !upiId && !showUpiApps) ||
+      (activeTab === "netbanking" && !selectedBank)
+    ) {
+      toast.error("Please fill all required payment details.");
+      return;
+    }
+
+    setProcessingPayment(true);
+
+    try {
+      const paymentData = {
+        paymentMethod: "online",
+        paymentDetails: {
+          ...(activeTab === "card" && {
+            last4: cardNumber.slice(-4),
+            cardName,
+            expiry,
+          }),
+          ...(activeTab === "upi" && {
+            upiId: showUpiApps ? "app_selected" : upiId,
+          }),
+          ...(activeTab === "netbanking" && {
+            bank: selectedBank?.name,
+            bankCode: selectedBank?.code,
+          }),
+        },
+      };
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/orders/${orderId}/pay`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(paymentData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Payment failed");
+      }
+
+      const result = await response.json();
+
+      setPaymentDetails({
+        paymentId: result.paymentId || `PAY-${Date.now()}`,
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString(),
+        method:
+          activeTab === "card"
+            ? "Credit/Debit Card"
+            : activeTab === "upi"
+            ? "UPI Payment"
+            : "Net Banking",
+        amount,
+      });
+
+      setPaymentSuccess(true);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
   const formatCardNumber = (value) => {
     const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || "";
     const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
+    for (let i = 0; i < v.length; i += 4) {
+      parts.push(v.substring(i, i + 4));
     }
-
-    if (parts.length) {
-      return parts.join(" ");
-    } else {
-      return value;
-    }
+    return parts.join(" ");
   };
 
   const handleCardNumberChange = (e) => {
@@ -101,88 +213,13 @@ const Payment = ({
   const selectCard = (card) => {
     setSelectedCard(card);
     setShowSavedCards(false);
-    // Auto-fill last 4 digits for demo purposes
     setCardNumber(`•••• •••• •••• ${card.last4}`);
     setExpiry(card.expiry);
   };
 
-  const upiApps = [
-    { id: 1, name: "Google Pay", icon: GPAY },
-    { id: 2, name: "PhonePe", icon: PhonePay },
-    { id: 3, name: "Paytm", icon: Paytm },
-    { id: 4, name: "BHIM UPI", icon: UPI },
-  ];
-
-  const handlePayment = async () => {
-    if (activeTab === "card" && (!cardNumber || !cardName || !expiry || !cvv)) {
-      return;
-    }
-    if (activeTab === "upi" && !upiId && !showUpiApps) {
-      return;
-    }
-    if (activeTab === "netbanking" && !selectedBank) {
-      return;
-    }
-
-    setProcessingPayment(true);
-
-    try {
-      // Simulate API call with actual data from props/state
-      const paymentData = {
-        orderId,
-        amount,
-        paymentMethod:
-          activeTab === "card"
-            ? "card"
-            : activeTab === "upi"
-            ? "upi"
-            : "netbanking",
-        paymentDetails:
-          activeTab === "card"
-            ? {
-                cardLast4: cardNumber.slice(-4),
-                cardName,
-                expiry,
-              }
-            : activeTab === "upi"
-            ? {
-                upiId: showUpiApps ? "app_selected" : upiId,
-              }
-            : {
-                bank: selectedBank.name,
-                bankCode: selectedBank.code,
-              },
-        testDetails,
-        formData,
-      };
-
-      // In a real app, you would call your payment API here
-      // const response = await processPayment(paymentData);
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Set payment details for success screen
-      setPaymentDetails({
-        paymentId: `RZP${Math.floor(Math.random() * 10000000)}`,
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString(),
-        method:
-          activeTab === "card"
-            ? "Credit/Debit Card"
-            : activeTab === "upi"
-            ? "UPI Payment"
-            : "Net Banking",
-        ...paymentData,
-      });
-
-      setPaymentSuccess(true);
-    } catch (error) {
-      console.error("Payment failed:", error);
-      // Handle error state here
-    } finally {
-      setProcessingPayment(false);
-    }
+  const selectBank = (bank) => {
+    setSelectedBank(bank);
+    setShowBankList(false);
   };
 
   const resetPayment = () => {
@@ -197,11 +234,6 @@ const Payment = ({
     setPaymentDetails(null);
   };
 
-  const selectBank = (bank) => {
-    setSelectedBank(bank);
-    setShowBankList(false);
-  };
-
   const isPayButtonDisabled = () => {
     if (processingPayment) return true;
     if (activeTab === "card")
@@ -212,9 +244,17 @@ const Payment = ({
   };
 
   const handleBack = () => {
-    navigate(-1); // Go back to previous page
+    navigate(-1);
   };
 
+  if (loading) {
+    return (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+        Loading payment details...
+      </div>
+    );
+  }
   return (
     <div className="payment-container">
       {!paymentSuccess ? (

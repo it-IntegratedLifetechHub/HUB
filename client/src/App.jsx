@@ -125,7 +125,7 @@ const App = () => {
           }
         />
         <Route
-          path="/payment"
+          path="/payment/:orderId"
           element={
             <PatientRoute
               element={<Payment />}

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body, check, validationResult } = require("express-validator");
+const { v4: uuidv4 } = require("uuid");
 
 const {
   registerValidation,
@@ -525,8 +526,6 @@ const validateBooking = [
 ];
 router.post("/api/orders", validateBooking, async (req, res) => {
   try {
-    console.log("Submitted data:", JSON.stringify(req.body, null, 2));
-
     const {
       testDetails,
       fullName,
@@ -541,19 +540,24 @@ router.post("/api/orders", validateBooking, async (req, res) => {
       state,
       zip,
       country,
-      paymentMethod, // Changed from payment to paymentMethod
+      paymentMethod,
+      userId,
     } = req.body;
 
     // Validate required fields
-    if (!testDetails || !testDetails.name || !testDetails.categoryId) {
+    if (!testDetails?.name || !testDetails?.categoryId) {
       return res.status(400).json({
         success: false,
-        message: "Test details are required",
+        message: "Test name and category ID are required",
       });
     }
-
-    // Validate payment method
-    if (!paymentMethod || !["cod", "online"].includes(paymentMethod)) {
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+    if (!["cod", "online"].includes(paymentMethod)) {
       return res.status(400).json({
         success: false,
         message: "Valid payment method (cod/online) is required",
@@ -561,6 +565,7 @@ router.post("/api/orders", validateBooking, async (req, res) => {
     }
 
     const order = new Order({
+      user: userId,
       test: {
         name: testDetails.name,
         categoryId: testDetails.categoryId,
@@ -578,10 +583,9 @@ router.post("/api/orders", validateBooking, async (req, res) => {
         gender,
       },
       payment: {
-        method: paymentMethod, // Set payment method from request
-        status: paymentMethod === "online" ? "pending" : "pending", // Default status
-        // Note: For online payments, you might want to set this to 'completed'
-        // after successful payment processing
+        method: paymentMethod,
+        status: "pending",
+        amount: testDetails.totalCost || 0, // Ensure amount is set
       },
       appointment: {
         preferredDate: new Date(preferredDate),
@@ -600,9 +604,15 @@ router.post("/api/orders", validateBooking, async (req, res) => {
 
     const savedOrder = await order.save();
 
+    // Return the order with both _id and id fields
+    const responseData = {
+      ...savedOrder.toObject(),
+      id: savedOrder._id.toString(), // Ensure id field is included
+    };
+
     res.status(201).json({
       success: true,
-      data: savedOrder,
+      data: responseData,
       message: "Booking confirmed successfully!",
     });
   } catch (err) {
@@ -629,4 +639,86 @@ router.post("/api/orders", validateBooking, async (req, res) => {
     });
   }
 });
+
+router.get("/api/orders/:orderId", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId)
+      .populate("user", "name email phone")
+      .populate("test.categoryId", "name");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: order,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+// Process payment
+router.post("/api/orders/:orderId/pay", async (req, res) => {
+  try {
+    const { paymentMethod, paymentDetails } = req.body;
+    const orderId = req.params.orderId;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.payment?.status === "completed") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment already completed",
+      });
+    }
+
+    // Update payment status
+    order.payment = {
+      method: paymentMethod,
+      status: "completed",
+      amount: order.test.totalCost,
+      completedAt: new Date(),
+      transactionId: uuidv4(),
+      details: paymentDetails, // storing payment details inside a subfield for clarity
+    };
+
+    order.status = "confirmed";
+
+    const savedOrder = await order.save();
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        orderId: savedOrder._id,
+        paymentId: savedOrder.payment.transactionId,
+        amount: savedOrder.payment.amount,
+        status: savedOrder.status,
+      },
+    });
+  } catch (err) {
+    console.error("Payment error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Payment processing failed",
+    });
+  }
+});
+
+module.exports = router;
+
 module.exports = router;

@@ -3,6 +3,13 @@ const { Schema } = mongoose;
 
 const orderSchema = new Schema(
   {
+    // User reference
+
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User reference is required"],
+    },
     // Test Information
     test: {
       name: { type: String, required: [true, "Test name is required"] },
