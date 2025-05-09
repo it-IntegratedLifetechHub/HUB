@@ -69,7 +69,14 @@ const orderSchema = new Schema(
         type: String,
         required: [true, "Payment status is required"],
         enum: {
-          values: ["pending", "completed", "canceled"],
+          values: [
+            "pending",
+            "test taken",
+            "in lab",
+            "generating report",
+            "completed",
+            "canceled",
+          ],
           message: "{VALUE} is not a valid payment status",
         },
         default: "pending",
@@ -103,7 +110,17 @@ const orderSchema = new Schema(
     status: {
       type: String,
       enum: {
-        values: ["pending", "confirmed", "completed", "cancelled"],
+        values: [
+          "pending", // Order created but sample not collected
+          "collected", // Sample collected from patient
+          "transit", // Sample in transit to lab
+          "in-lab", // Sample received at lab
+          "processing", // Sample being processed
+          "report-pending", // Analysis complete, report being finalized
+          "report-ready", // Report ready for download
+          "completed", // Order fully completed
+          "cancelled", // Order cancelled
+        ],
         message: "{VALUE} is not a valid status",
       },
       default: "pending",

@@ -295,7 +295,7 @@ const Book = () => {
       toast.success("Booking created successfully!");
 
       setTimeout(() => {
-        navigate("/appointments", {
+        navigate("/orders", {
           state: {
             bookingSuccess: true,
             bookingData: data.data,
@@ -321,10 +321,21 @@ const Book = () => {
   const minDate = tomorrow.toISOString().split("T")[0];
 
   const timeSlots = [
-    { value: "08:00-10:00", label: "Morning (08:00-10:00)" },
-    { value: "10:00-12:00", label: "Late Morning (10:00-12:00)" },
-    { value: "12:00-14:00", label: "Afternoon (12:00-14:00)" },
-    { value: "14:00-16:00", label: "Early Evening (14:00-16:00)" },
+    { value: "08:00 AM - 10:00 AM", label: "Morning • 08:00 AM – 10:00 AM" },
+    {
+      value: "10:00 AM - 12:00 PM",
+      label: "Late Morning • 10:00 AM – 12:00 PM",
+    },
+    { value: "12:00 PM - 02:00 PM", label: "Afternoon • 12:00 PM – 02:00 PM" },
+    {
+      value: "02:00 PM - 04:00 PM",
+      label: "Early Evening • 02:00 PM – 04:00 PM",
+    },
+    { value: "04:00 PM - 06:00 PM", label: "Evening • 04:00 PM – 06:00 PM" },
+    {
+      value: "06:00 PM - 08:00 PM",
+      label: "Late Evening • 06:00 PM – 08:00 PM",
+    },
   ];
 
   const toggleAccordion = (index) => {

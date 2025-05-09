@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import {
-  FaCheckCircle,
-  FaFlask,
-  FaFileAlt,
   FaCalendarAlt,
-  FaClock,
   FaDownload,
   FaPhone,
   FaInfoCircle,
-  FaUserNurse,
   FaMapMarkerAlt,
   FaSpinner,
+  FaClock,
+  FaCheckCircle,
+  FaTruck,
+  FaFlask,
+  FaHourglassHalf,
+  FaFileAlt,
   FaChevronDown,
   FaChevronUp,
   FaExclamationTriangle,
@@ -22,7 +23,7 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState(null);
-  const [activeTab, setActiveTab] = useState("recent"); // 'recent' or 'completed'
+  const [activeTab, setActiveTab] = useState("recent");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -30,18 +31,12 @@ const Orders = () => {
       try {
         setLoading(true);
         const userData = JSON.parse(localStorage.getItem("user"));
-
-        if (!userData?.id) {
-          throw new Error("User not authenticated");
-        }
+        if (!userData?.id) throw new Error("User not authenticated");
 
         const response = await fetch(
           `${import.meta.env.VITE_API_URL}/api/orders/user/${userData.id}`
         );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch orders");
-        }
+        if (!response.ok) throw new Error("Failed to fetch orders");
 
         const data = await response.json();
         setOrders(data);
@@ -60,58 +55,114 @@ const Orders = () => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
-  const getStatusSteps = (status) => {
-    const steps = [
-      {
-        icon: <FaCheckCircle />,
-        label: "Test Taken",
-        status: "completed",
-        description: "Sample collected successfully",
+  const getStatusInfo = (status) => {
+    // Define all possible steps grouped by sector
+    const statusSectors = {
+      collection: {
+        icon: <FaClock />,
+        label: "Sample Collection",
+        subStatuses: [
+          {
+            key: "pending",
+            label: "Test Pending",
+            description: "Test has been scheduled and is awaiting collection.",
+          },
+          {
+            key: "collected",
+            label: "Sample Collected",
+            description: "Sample collected successfully.",
+          },
+        ],
       },
-      {
+      transit: {
+        icon: <FaTruck />,
+        label: "Sample Transit",
+        subStatuses: [
+          {
+            key: "transit",
+            label: "Delivering to Lab",
+            description: "Sample is being transported to the lab.",
+          },
+        ],
+      },
+      processing: {
         icon: <FaFlask />,
-        label: "In Lab",
-        status: "in-lab",
-        description: "Processing your sample",
+        label: "Lab Processing",
+        subStatuses: [
+          {
+            key: "in-lab",
+            label: "Sample Received",
+            description:
+              "Sample has arrived at the lab and is being processed.",
+          },
+          {
+            key: "processing",
+            label: "Analysis in Progress",
+            description: "Sample is undergoing analysis in the lab.",
+          },
+        ],
       },
-      {
+      reporting: {
         icon: <FaFileAlt />,
-        label: "Report Ready",
-        status: "pending",
-        description: "Results being prepared",
+        label: "Report Generation",
+        subStatuses: [
+          {
+            key: "report-pending",
+            label: "Report Pending",
+            description: "Analysis complete, report is being finalized.",
+          },
+          {
+            key: "report-ready",
+            label: "Report Ready",
+            description: "Your report is ready for download.",
+          },
+        ],
       },
-    ];
+    };
 
-    return steps.map((step) => {
-      if (status === "completed") {
-        return {
-          ...step,
-          current: true,
-          description:
-            step.status === "pending"
-              ? "Report available for download"
-              : step.description,
-        };
-      } else if (status === "in-lab") {
-        return {
-          ...step,
-          current: step.status !== "pending",
-          description:
-            step.status === "pending"
-              ? "Estimated completion: 2-3 days"
-              : step.description,
-        };
-      } else {
-        return {
-          ...step,
-          current: step.status === "completed",
-          description:
-            step.status === "completed"
-              ? "Waiting for sample collection"
-              : step.description,
-        };
-      }
-    });
+    // Determine which sector to show based on current status
+    let activeSector = null;
+    let activeSubStatus = null;
+
+    if (status === "pending" || status === "collected") {
+      activeSector = "collection";
+      activeSubStatus = status;
+    } else if (status === "transit") {
+      activeSector = "transit";
+      activeSubStatus = status;
+    } else if (status === "in-lab" || status === "processing") {
+      activeSector = "processing";
+      activeSubStatus = status;
+    } else if (status === "report-pending" || status === "report-ready") {
+      activeSector = "reporting";
+      activeSubStatus = status;
+    } else if (status === "completed") {
+      // For completed orders, show all sectors as completed
+      activeSector = "reporting";
+      activeSubStatus = "report-ready";
+    } else if (status === "cancelled") {
+      return {
+        sectorIcon: <FaExclamationTriangle />,
+        sectorLabel: "Order Cancelled",
+        label: "Cancelled",
+        description: "This order has been cancelled.",
+      };
+    }
+
+    // Get the active sector data
+    const sector = statusSectors[activeSector] || statusSectors.collection;
+
+    // Find the active substatus within the sector
+    const activeSubStatusData =
+      sector.subStatuses.find(
+        (sub) => sub.key === (activeSubStatus || "pending")
+      ) || sector.subStatuses[0];
+
+    return {
+      sectorIcon: sector.icon,
+      sectorLabel: sector.label,
+      ...activeSubStatusData,
+    };
   };
 
   const downloadReport = (orderId) => {
@@ -127,15 +178,12 @@ const Orders = () => {
     window.location.href = "tel:+18001234567";
   };
 
-  // Filter and search orders
   const filteredOrders = orders
-    .filter((order) => {
-      if (activeTab === "completed") {
-        return order.status === "completed";
-      } else {
-        return order.status !== "completed";
-      }
-    })
+    .filter((order) =>
+      activeTab === "completed"
+        ? order.status === "completed"
+        : order.status !== "completed"
+    )
     .filter((order) =>
       order.test.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -246,199 +294,190 @@ const Orders = () => {
         </div>
       ) : (
         <div className="orders-list">
-          {filteredOrders.map((order) => (
-            <div key={order._id} className={`order-card ${order.status}`}>
-              <div className="card-header">
-                <div className="test-info">
-                  <h2 className="test-name">{order.test.name}</h2>
-                  <div className="order-meta">
-                    <p className="collection-type">
-                      <FaMapMarkerAlt />{" "}
-                      {order.appointment.collectionType || "Lab Visit"}
-                    </p>
-                    <p className="order-id">Order #{order._id.slice(-6)}</p>
+          {filteredOrders.map((order) => {
+            const statusInfo = getStatusInfo(order.status);
+            return (
+              <div key={order._id} className={`order-card ${order.status}`}>
+                <div className="card-header">
+                  <div className="test-info">
+                    <h2 className="test-name">{order.test.name}</h2>
+                    <div className="order-meta">
+                      <p className="collection-type">
+                        <FaMapMarkerAlt />{" "}
+                        {order.appointment.collectionType || "Lab Visit"}
+                      </p>
+                      <p className="order-id">Order #{order._id.slice(-6)}</p>
+                    </div>
                   </div>
-                </div>
-                <span className={`status-badge ${order.status}`}>
-                  {order.status === "completed"
-                    ? "Completed"
-                    : order.status === "in-lab"
-                    ? "In Progress"
-                    : "Pending"}
-                </span>
-              </div>
-
-              <div className="order-details-grid">
-                <div className="detail-item">
-                  <FaCalendarAlt className="detail-icon" />
-                  <div>
-                    <p className="detail-label">Booked Date</p>
-                    <p className="detail-value">
-                      {formatDate(order.createdAt)}
-                    </p>
-                  </div>
+                  <span className={`status-badge ${order.status}`}>
+                    {order.status === "completed"
+                      ? "Completed"
+                      : order.status === "cancelled"
+                      ? "Cancelled"
+                      : order.status === "in-lab" ||
+                        order.status === "processing"
+                      ? "In Progress"
+                      : "Pending"}
+                  </span>
                 </div>
 
-                {order.status === "completed" ? (
+                <div className="order-details-grid">
                   <div className="detail-item">
-                    <FaCheckCircle className="detail-icon" />
+                    <FaCalendarAlt className="detail-icon" />
                     <div>
-                      <p className="detail-label">Completed Date</p>
+                      <p className="detail-label">Booked Date</p>
                       <p className="detail-value">
-                        {order.completedAt
-                          ? formatDate(order.completedAt)
-                          : "N/A"}
+                        {formatDate(order.createdAt)}
                       </p>
                     </div>
                   </div>
-                ) : (
+
                   <div className="detail-item">
-                    <FaFlask className="detail-icon" />
+                    {order.status === "completed" ? (
+                      <>
+                        <FaCheckCircle className="detail-icon" />
+                        <div>
+                          <p className="detail-label">Completed Date</p>
+                          <p className="detail-value">
+                            {order.completedAt
+                              ? formatDate(order.completedAt)
+                              : "N/A"}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <FaFlask className="detail-icon" />
+                        <div>
+                          <p className="detail-label">
+                            {order.status === "in-lab" ||
+                            order.status === "processing"
+                              ? "Estimated Completion"
+                              : "Scheduled Date"}
+                          </p>
+                          <p className="detail-value">
+                            {order.appointment.preferredDate
+                              ? formatDate(order.appointment.preferredDate)
+                              : "N/A"}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="detail-item">
+                    <FaClock className="detail-icon" />
                     <div>
                       <p className="detail-label">
-                        {order.status === "in-lab"
-                          ? "Estimated Completion"
-                          : "Scheduled Date"}
+                        {order.status === "completed"
+                          ? "Collection Time"
+                          : "Scheduled Time"}
                       </p>
                       <p className="detail-value">
-                        {order.appointment.preferredDate
-                          ? formatDate(order.appointment.preferredDate)
-                          : "N/A"}
+                        {formatTime(order.appointment.preferredTime)}
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {order.notes && (
+                  <div className="notes-section">
+                    <p className="notes-label">
+                      <FaInfoCircle /> Important Notes:
+                    </p>
+                    <p className="notes-text">{order.notes}</p>
+                  </div>
+                )}
+                <div className="order-status-section-modern">
+                  <h3 className="section-heading">📊 Test Status Overview</h3>
+                  <div className="status-card">
+                    <div className="sector-icon-box">
+                      {React.cloneElement(statusInfo.sectorIcon, {
+                        className: "modern-sector-icon",
+                      })}
+                      <span className="modern-sector-label">
+                        {statusInfo.sectorLabel}
+                      </span>
+                    </div>
+                    <div className="modern-status-details">
+                      <div className="modern-status-badge">
+                        {statusInfo.label}
+                      </div>
+                      <p className="modern-status-description">
+                        {statusInfo.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {expandedOrder === order._id && (
+                  <div className="additional-details">
+                    <h4>Test Details</h4>
+                    <div className="details-grid">
+                      <div>
+                        <p className="detail-label">Preparation</p>
+                        <p>
+                          {order.test.preparation || "No special preparation"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="detail-label">Duration</p>
+                        <p>{order.test.turnaroundTime || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="detail-label">Specialist</p>
+                        <p>{order.test.specialist || "General Practitioner"}</p>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                <div className="detail-item">
-                  <FaClock className="detail-icon" />
-                  <div>
-                    <p className="detail-label">
-                      {order.status === "completed"
-                        ? "Collection Time"
-                        : "Scheduled Time"}
-                    </p>
-                    <p className="detail-value">
-                      {formatTime(order.appointment.preferredTime)}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                <div className="action-buttons">
+                  <button
+                    className="action-button details"
+                    onClick={() => toggleOrderDetails(order._id)}
+                  >
+                    {expandedOrder === order._id ? (
+                      <>
+                        <FaChevronUp /> Hide Details
+                      </>
+                    ) : (
+                      <>
+                        <FaChevronDown /> View Details
+                      </>
+                    )}
+                  </button>
 
-              {order.notes && (
-                <div className="notes-section">
-                  <p className="notes-label">
-                    <FaInfoCircle /> Important Notes:
-                  </p>
-                  <p className="notes-text">{order.notes}</p>
-                </div>
-              )}
-
-              <div className="order-status-section">
-                <h3>Test Status</h3>
-                <div className="progress-tracker">
-                  {getStatusSteps(order.status).map((step, index) => (
-                    <React.Fragment key={index}>
-                      <div className={`step ${step.current ? "active" : ""}`}>
-                        <div className="step-icon">
-                          {React.cloneElement(step.icon, {
-                            className: step.current ? "active-icon" : "",
-                          })}
-                        </div>
-                        <div className="step-info">
-                          <span className="step-label">{step.label}</span>
-                          <span className="step-description">
-                            {step.description}
-                          </span>
-                        </div>
-                      </div>
-                      {index < getStatusSteps(order.status).length - 1 && (
-                        <div
-                          className={`connector ${
-                            step.current ? "active-connector" : ""
-                          }`}
-                        />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-
-              {expandedOrder === order._id && (
-                <div className="additional-details">
-                  <h4>Test Details</h4>
-                  <div className="details-grid">
-                    <div>
-                      <p className="detail-label">Preparation</p>
-                      <p>
-                        {order.test.preparation || "No special preparation"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="detail-label">Duration</p>
-                      <p>{order.test.turnaroundTime || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="detail-label">Specialist</p>
-                      <p>{order.test.specialist || "General Practitioner"}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="action-buttons">
-                {order.status === "completed" ? (
-                  <>
+                  {order.status === "completed" ? (
                     <button
                       className="action-button download"
                       onClick={() => downloadReport(order._id)}
                     >
                       <FaDownload /> Download Report
                     </button>
-                    <button
-                      className="action-button details"
-                      onClick={() => toggleOrderDetails(order._id)}
-                    >
-                      {expandedOrder === order._id ? (
-                        <>
-                          <FaChevronUp /> Hide Details
-                        </>
-                      ) : (
-                        <>
-                          <FaChevronDown /> View Details
-                        </>
-                      )}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="action-button details"
-                      onClick={() => toggleOrderDetails(order._id)}
-                    >
-                      {expandedOrder === order._id ? (
-                        <>
-                          <FaChevronUp /> Hide Details
-                        </>
-                      ) : (
-                        <>
-                          <FaChevronDown /> View Details
-                        </>
-                      )}
-                    </button>
+                  ) : order.status === "cancelled" ? (
                     <button
                       className="action-button contact"
                       onClick={contactSupport}
                     >
                       <FaPhone /> Contact Support
                     </button>
-                  </>
-                )}
+                  ) : (
+                    <button
+                      className="action-button contact"
+                      onClick={contactSupport}
+                    >
+                      <FaPhone /> Contact Support
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <BottomNavigation />
+
       <style jsx="true">{`
         /* Color Variables */
         :root {
@@ -1155,6 +1194,156 @@ const Orders = () => {
           .search-input {
             padding: 10px 15px 10px 40px;
             background-position: 12px center;
+          }
+        }
+        .order-status-section-modern {
+          margin-top: 1.5rem;
+          padding: 1.5rem;
+          background: linear-gradient(to right, #f7f9fc, #eef1f8);
+          border-radius: 1rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+          transition: all 0.3s ease-in-out;
+        }
+
+        .section-heading {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #1e293b;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .status-card {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          padding: 1.25rem;
+          background: white;
+          border-radius: 0.875rem;
+          border: 1px solid #e0e7ff;
+          transition: transform 0.2s ease-in-out;
+          flex-wrap: wrap; /* for better wrapping on smaller screens */
+        }
+
+        .status-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .sector-icon-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-width: 90px;
+          text-align: center;
+          flex-shrink: 0;
+        }
+
+        .modern-sector-icon {
+          font-size: 2.2rem;
+          color: #6a0dad;
+          background: #e0ecff;
+          padding: 0.6rem;
+          border-radius: 50%;
+          margin-bottom: 0.5rem;
+        }
+
+        .modern-sector-label {
+          font-size: 0.85rem;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        .modern-status-details {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 200px;
+        }
+
+        .modern-status-badge {
+          display: inline-block;
+          padding: 0.5rem 1rem;
+          background: linear-gradient(to right, #6a0dad, #6366f1);
+          color: #fff;
+          border-radius: 9999px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          box-shadow: 0 3px 8px rgba(99, 102, 241, 0.2);
+          width: fit-content;
+        }
+
+        .modern-status-description {
+          font-size: 0.95rem;
+          color: #334155;
+          line-height: 1.5;
+        }
+
+        /* RESPONSIVE BREAKPOINTS */
+
+        @media (max-width: 768px) {
+          .status-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
+
+          .sector-icon-box {
+            flex-direction: row;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: flex-start;
+            min-width: auto;
+          }
+
+          .modern-sector-label {
+            font-size: 0.9rem;
+            text-align: left;
+            margin: 0;
+          }
+
+          .modern-sector-icon {
+            font-size: 2rem;
+            padding: 0.5rem;
+          }
+
+          .modern-status-badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.9rem;
+          }
+
+          .modern-status-description {
+            font-size: 0.9rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .section-heading {
+            font-size: 1.1rem;
+          }
+
+          .order-status-section-modern {
+            padding: 1rem;
+          }
+
+          .status-card {
+            padding: 1rem;
+          }
+
+          .modern-sector-icon {
+            font-size: 1.8rem;
+          }
+
+          .modern-status-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+          }
+
+          .modern-status-description {
+            font-size: 0.85rem;
           }
         }
       `}</style>
