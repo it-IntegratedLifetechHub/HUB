@@ -36,6 +36,10 @@ import Payment from "./components/Payement";
 import Services from "./pages/Hub/Services";
 import AddCategory from "./pages/Hub/AddCategory";
 import AddTest from "./pages/Hub/AddTest";
+import ProtectedRoute from "./pages/Hub/ProtectedRoute";
+
+import HubRegistration from "./pages/Hub/HubRegistration";
+import HubLogin from "./pages/Hub/HubLogin";
 
 const RefreshHandler = ({ setIsAuthenticated }) => {
   const location = useLocation();
@@ -80,14 +84,13 @@ const App = () => {
       <RefreshHandler setIsAuthenticated={setIsAuthenticated} />
       <AutoScroll />
       <Routes>
-        {/* Public Routes */}
+        {/* ~~~~~~  PATIENT Routes  ~~~~~~ */}
         <Route path="/patient/registration" element={<PatientRegistration />} />
         <Route
           path="/patient/login"
           element={<PatientLogin setIsAuthenticated={setIsAuthenticated} />}
         />
 
-        {/* Protected Patient Routes */}
         <Route
           path="/patient"
           element={
@@ -161,7 +164,71 @@ const App = () => {
           }
         />
 
-        {/* Other Role Routes */}
+        {/* ~~~~~~  HUB Routes  ~~~~~~ */}
+        <Route path="/hub/registration" element={<HubRegistration />} />
+        <Route path="/hub/login" element={<HubLogin />} />
+
+        <Route
+          path="/hub/dashboard"
+          element={
+            <ProtectedRoute>
+              <HubDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hub/orders"
+          element={
+            <ProtectedRoute>
+              <HubOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hub/assignment"
+          element={
+            <ProtectedRoute>
+              <HubAssignment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hub/track"
+          element={
+            <ProtectedRoute>
+              <HubTrack />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hub/services"
+          element={
+            <ProtectedRoute>
+              <Services />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hub/addcat"
+          element={
+            <ProtectedRoute>
+              <AddCategory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hub/addtest/:categoryId"
+          element={
+            <ProtectedRoute>
+              <AddTest />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Redirects */}
+        <Route path="/" element={<Navigate to="/patient" replace />} />
+
+         {/* Other Role Routes */}
         <Route path="/phlebotomist/dashboard" element={<Phlebotomist />} />
         <Route path="/phlebotomist/task" element={<PhlebotomistTask />} />
         <Route path="/phlebotomist/profile" element={<PhlebotomistProfile />} />
@@ -169,18 +236,6 @@ const App = () => {
         <Route path="/lab/test" element={<LabTest />} />
         <Route path="/lab/report" element={<LabReport />} />
         <Route path="/lab/profile" element={<LabProfile />} />
-
-        <Route path="/hub/dashboard" element={<HubDashboard />} />
-        <Route path="/hub/orders" element={<HubOrders />} />
-        <Route path="/hub/assignment" element={<HubAssignment />} />
-        <Route path="/hub/track" element={<HubTrack />} />
-
-        <Route path="/hub/services" element={<Services />} />
-        <Route path="/hub/addcat" element={<AddCategory />} />
-        <Route path="/hub/addtest/:categoryId" element={<AddTest />} />
-
-        {/* Redirects */}
-        <Route path="/" element={<Navigate to="/patient" replace />} />
 
         {/* 404 Route */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />

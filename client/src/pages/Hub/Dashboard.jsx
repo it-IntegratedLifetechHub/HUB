@@ -1,18 +1,41 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import HubNav from "../../components/HubNav";
 
 const Dashboard = () => {
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    growthPatients: 0, // You can fetch or compute this as needed
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/patients/total`
+        );
+        const data = await response.json();
+        setStats((prev) => ({
+          ...prev,
+          totalPatients: data.totalPatients || 0,
+        }));
+      } catch (error) {
+        console.error("Error fetching patient stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   // Sample data - in a real app, this would come from API calls
-  const stats = {
-    totalPatients: 1245,
-    totalLabs: 42,
-    totalPhlebotomists: 87,
-    activeOrders: 189,
-    growthPatients: 12,
-    growthLabs: 5,
-    growthPhlebotomists: 8,
-    growthOrders: -3,
-  };
+  // const stats = {
+  //   totalLabs: 42,
+  //   totalPhlebotomists: 87,
+  //   activeOrders: 189,
+  //   growthPatients: 12,
+  //   growthLabs: 5,
+  //   growthPhlebotomists: 8,
+  //   growthOrders: -3,
+  // };
 
   const recentOrders = [
     {
@@ -169,7 +192,7 @@ const Dashboard = () => {
             <div className="stat-content">
               <h3>Total Labs</h3>
               <div className="stat-value">
-                {stats.totalLabs.toLocaleString()}
+                {/* {stats.totalLabs.toLocaleString()} */}
               </div>
               <div className="stat-growth positive">
                 <span className="trend-icon">↑</span> +{stats.growthLabs}% from
@@ -183,7 +206,7 @@ const Dashboard = () => {
             <div className="stat-content">
               <h3>Total Phlebotomists</h3>
               <div className="stat-value">
-                {stats.totalPhlebotomists.toLocaleString()}
+                {/* {stats.totalPhlebotomists.toLocaleString()} */}
               </div>
               <div className="stat-growth positive">
                 <span className="trend-icon">↑</span> +
@@ -197,7 +220,7 @@ const Dashboard = () => {
             <div className="stat-content">
               <h3>Active Orders</h3>
               <div className="stat-value">
-                {stats.activeOrders.toLocaleString()}
+                {/* {stats.activeOrders.toLocaleString()} */}
               </div>
               <div className="stat-growth negative">
                 <span className="trend-icon">↓</span> {stats.growthOrders}% from

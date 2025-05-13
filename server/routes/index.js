@@ -3,6 +3,9 @@ const router = express.Router();
 const { body, check, validationResult } = require("express-validator");
 const { v4: uuidv4 } = require("uuid");
 
+const Admin = require("../Models/Admin");
+const jwt = require("jsonwebtoken");
+
 const {
   registerValidation,
   loginValidation,
@@ -767,5 +770,107 @@ router.get("/api/orders/user/:userId", async (req, res) => {
     });
   }
 });
+
+// ~~~~~~  HUB routes  ~~~~~~~~
+router.get("/api/patients/total", async (req, res) => {
+  try {
+    const total = await Patient.countDocuments();
+    res.status(200).json({ totalPatients: total });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch total patients" });
+  }
+});
+
+// Register Admin
+router.post(
+  "/api/hub/register",
+  [
+    check("email", "Please include a valid email").isEmail(),
+    check(
+      "password",
+      "Please enter a password with 8 or more characters"
+    ).isLength({ min: 8 }),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+      // Check if admin exists
+      let admin = await Admin.findOne({ email });
+      if (admin) {
+        return res.status(400).json({ msg: "Admin already exists" });
+      }
+
+      admin = new Admin({ email, password });
+      await admin.save();
+
+      // Create JWT
+      const payload = { admin: { id: admin.id } };
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: "5h" },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
+// Login Admin
+router.post(
+  "/api/hub/login",
+  [
+    check("email", "Please include a valid email").isEmail(),
+    check("password", "Password is required").exists(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+      // Check if admin exists
+      const admin = await Admin.findOne({ email });
+      if (!admin) {
+        return res.status(400).json({ msg: "Invalid credentials" });
+      }
+
+      // Check password
+      const isMatch = await admin.comparePassword(password);
+      if (!isMatch) {
+        return res.status(400).json({ msg: "Invalid credentials" });
+      }
+
+      // Create JWT
+      const payload = { admin: { id: admin.id } };
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: "5h" },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
 
 module.exports = router;
