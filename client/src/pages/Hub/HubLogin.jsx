@@ -71,7 +71,7 @@ const HubLogin = () => {
         if (rememberMe) {
           localStorage.setItem("adminToken", data.token);
         } else {
-          sessionStorage.setItem("adminToken", data.token);
+          localStorage.setItem("adminToken", data.token);
         }
 
         navigate("/hub/dashboard");
