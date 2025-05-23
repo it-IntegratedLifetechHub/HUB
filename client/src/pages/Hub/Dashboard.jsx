@@ -36,44 +36,63 @@ const Dashboard = () => {
   //   growthPhlebotomists: 8,z
   //   growthOrders: -3,
   // };
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const recentOrders = [
-    {
-      id: "#ORD-1001",
-      patient: "John Doe",
-      test: "CBC",
-      date: "2023-05-15",
-      status: "Pending",
-    },
-    {
-      id: "#ORD-1002",
-      patient: "Jane Smith",
-      test: "Lipid Panel",
-      date: "2023-05-14",
-      status: "In Progress",
-    },
-    {
-      id: "#ORD-1003",
-      patient: "Robert Johnson",
-      test: "Thyroid Test",
-      date: "2023-05-14",
-      status: "Completed",
-    },
-    {
-      id: "#ORD-1004",
-      patient: "Emily Davis",
-      test: "Glucose Test",
-      date: "2023-05-13",
-      status: "Completed",
-    },
-    {
-      id: "#ORD-1005",
-      patient: "Michael Wilson",
-      test: "Liver Function",
-      date: "2023-05-13",
-      status: "Cancelled",
-    },
-  ];
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const params = new URLSearchParams({
+          sort: "newest",
+          limit: 5,
+        });
+
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/hub/orders?${params}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch orders");
+        }
+
+        const data = await response.json();
+        setOrders(data.data);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Format date to YYYY-MM-DD
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0];
+  };
+
+  // Map API status to display status
+  const getDisplayStatus = (status) => {
+    const statusMap = {
+      pending: "Pending",
+      confirmed: "Confirmed",
+      collected: "In Progress",
+      transit: "In Progress",
+      "in-lab": "In Progress",
+      processing: "In Progress",
+      "report-pending": "In Progress",
+      "report-ready": "Completed",
+      completed: "Completed",
+      cancelled: "Cancelled",
+    };
+    return statusMap[status.toLowerCase()] || status;
+  };
+
+  if (loading) return <div className="loading">Loading recent orders...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   const phlebotomists = [
     {
@@ -250,22 +269,22 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td>{order.id}</td>
+                  {orders.map((order) => (
+                    <tr key={order._id}>
+                      <td>#{order.orderNumber}</td>
                       <td className="patient-cell">
                         <span className="patient-avatar">
-                          {order.patient.charAt(0)}
+                          {order.patient.fullName.charAt(0)}
                         </span>
-                        {order.patient}
+                        {order.patient.fullName}
                       </td>
-                      <td>{order.test}</td>
-                      <td>{order.date}</td>
+                      <td>{order.test.name}</td>
+                      <td>{formatDate(order.createdAt)}</td>
                       <td>
                         <span
                           className={`status-badge ${order.status
                             .toLowerCase()
-                            .replace(" ", "-")}`}
+                            .replace(/\s+/g, "-")}`}
                         >
                           {order.status}
                         </span>

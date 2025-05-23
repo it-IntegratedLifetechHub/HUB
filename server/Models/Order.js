@@ -8,7 +8,6 @@ const orderSchema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User reference is required"],
     },
     // Test Information
     test: {
@@ -71,8 +70,6 @@ const orderSchema = new Schema(
         enum: {
           values: [
             "pending",
-            "confirmed",
-
             "test taken",
             "in lab",
             "generating report",
@@ -114,7 +111,6 @@ const orderSchema = new Schema(
       enum: {
         values: [
           "pending",
-          "confirmed", // Add this
           "collected",
           "transit",
           "in-lab",
