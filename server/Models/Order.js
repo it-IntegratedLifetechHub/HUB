@@ -71,6 +71,8 @@ const orderSchema = new Schema(
         enum: {
           values: [
             "pending",
+            "confirmed",
+
             "test taken",
             "in lab",
             "generating report",
@@ -111,15 +113,16 @@ const orderSchema = new Schema(
       type: String,
       enum: {
         values: [
-          "pending", // Order created but sample not collected
-          "collected", // Sample collected from patient
-          "transit", // Sample in transit to lab
-          "in-lab", // Sample received at lab
-          "processing", // Sample being processed
-          "report-pending", // Analysis complete, report being finalized
-          "report-ready", // Report ready for download
-          "completed", // Order fully completed
-          "cancelled", // Order cancelled
+          "pending",
+          "confirmed", // Add this
+          "collected",
+          "transit",
+          "in-lab",
+          "processing",
+          "report-pending",
+          "report-ready",
+          "completed",
+          "cancelled",
         ],
         message: "{VALUE} is not a valid status",
       },
