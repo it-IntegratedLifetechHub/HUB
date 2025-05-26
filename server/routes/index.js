@@ -772,14 +772,21 @@ router.get("/api/orders/user/:userId", async (req, res) => {
 });
 
 // ~~~~~~  HUB routes  ~~~~~~~~
-router.get("/api/patients/total", async (req, res) => {
-  try {
-    const total = await Patient.countDocuments();
-    res.status(200).json({ totalPatients: total });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch total patients" });
+router.get(
+  "/api/patients/total",
+  [
+    check("email", "Please include a valid email").isEmail(),
+    check("password", "Password is required").exists(),
+  ],
+  async (req, res) => {
+    try {
+      const total = await Patient.countDocuments();
+      res.status(200).json({ totalPatients: total });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch total patients" });
+    }
   }
-});
+);
 
 // Register Admin
 router.post(
@@ -872,64 +879,74 @@ router.post(
     }
   }
 );
-router.get("/api/hub/orders", async (req, res) => {
-  try {
-    // Get optional query parameters for filtering
-    const { status, paymentStatus, sort, fromDate, toDate } = req.query;
+router.get(
+  "/api/hub/orders",
+  [
+    check("email", "Please include a valid email").isEmail(),
+    check("password", "Password is required").exists(),
+  ],
+  async (req, res) => {
+    try {
+      // Get optional query parameters for filtering
+      const { status, paymentStatus, sort, fromDate, toDate } = req.query;
 
-    // Build the base query
-    const query = {};
+      // Build the base query
+      const query = {};
 
-    // Add status filter if provided
-    if (status) {
-      query.status = status;
+      // Add status filter if provided
+      if (status) {
+        query.status = status;
+      }
+
+      // Add payment status filter if provided
+      if (paymentStatus) {
+        query["payment.status"] = paymentStatus;
+      }
+
+      // Add date range filter if provided
+      if (fromDate || toDate) {
+        query.createdAt = {};
+        if (fromDate) query.createdAt.$gte = new Date(fromDate);
+        if (toDate) query.createdAt.$lte = new Date(toDate);
+      }
+
+      // Build sort options
+      const sortOptions = {};
+      if (sort === "newest") {
+        sortOptions.createdAt = -1;
+      } else if (sort === "oldest") {
+        sortOptions.createdAt = 1;
+      } else {
+        // Default sort by newest first
+        sortOptions.createdAt = -1;
+      }
+
+      // Fetch orders with optional population
+      const orders = await Order.find(query).sort(sortOptions);
+      // Note: Removed .populate() to avoid User model dependency
+      // If you need populated data, you'll need to implement the User model
+
+      // Log orders to console (for debugging)
+      console.log(`Fetched ${orders.length} orders`);
+
+      // Send response
+      res.status(200).json({
+        success: true,
+        count: orders.length,
+        data: orders,
+      });
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve orders",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
     }
-
-    // Add payment status filter if provided
-    if (paymentStatus) {
-      query["payment.status"] = paymentStatus;
-    }
-
-    // Add date range filter if provided
-    if (fromDate || toDate) {
-      query.createdAt = {};
-      if (fromDate) query.createdAt.$gte = new Date(fromDate);
-      if (toDate) query.createdAt.$lte = new Date(toDate);
-    }
-
-    // Build sort options
-    const sortOptions = {};
-    if (sort === "newest") {
-      sortOptions.createdAt = -1;
-    } else if (sort === "oldest") {
-      sortOptions.createdAt = 1;
-    } else {
-      // Default sort by newest first
-      sortOptions.createdAt = -1;
-    }
-
-    // Fetch orders with optional population
-    const orders = await Order.find(query).sort(sortOptions);
-    // Note: Removed .populate() to avoid User model dependency
-    // If you need populated data, you'll need to implement the User model
-
-    // Log orders to console (for debugging)
-    console.log(`Fetched ${orders.length} orders`);
-
-    // Send response
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      data: orders,
-    });
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to retrieve orders",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
   }
-});
+);
+
+
 
 module.exports = router;

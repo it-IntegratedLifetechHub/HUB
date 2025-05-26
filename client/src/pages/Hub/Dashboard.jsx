@@ -94,6 +94,10 @@ const Dashboard = () => {
   if (loading) return <div className="loading">Loading recent orders...</div>;
   if (error) return <div className="error">{error}</div>;
 
+  const handleLogout = () => {
+    // Clear tokens or session storage if needed
+    localStorage.removeItem("adminToken"); // or sessionStorage.clear()
+  };
   const phlebotomists = [
     {
       id: "PH-101",
@@ -182,11 +186,8 @@ const Dashboard = () => {
             </p>
           </div>
           <div className="dashboard-actions">
-            <button className="btn refresh-btn">
-              <span className="icon">🔄</span> Refresh
-            </button>
-            <button className="btn export-btn">
-              <span className="icon">📁</span> Export
+            <button className="btn logout-btn" onClick={handleLogout}>
+              <span className="icon">🚪</span> Logout
             </button>
           </div>
         </header>
@@ -527,13 +528,13 @@ const Dashboard = () => {
           font-size: 16px;
         }
 
-        .refresh-btn {
+        .logout-btn {
           background-color: var(--card-bg);
           color: var(--text-color);
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        .refresh-btn:hover {
+        .logout-btn:hover {
           background-color: #e0e0e0;
           transform: translateY(-2px);
         }
