@@ -1,34 +1,33 @@
 require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const path = require("path");
 const createError = require("http-errors");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 const compression = require("compression");
 
-// Initialize Express app
+// Initialize app
 const app = express();
 
 // Validate required environment variables
-const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET"];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    console.error(`❌ Error: Missing required environment variable ${envVar}`);
+["MONGODB_URI", "JWT_SECRET"].forEach((key) => {
+  if (!process.env[key]) {
+    console.error(`❌ Missing environment variable: ${key}`);
     process.exit(1);
   }
-}
+});
 
-// Environment variables with defaults
+// Environment configs
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const MONGODB_URI = process.env.MONGODB_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
-const TRUST_PROXY = process.env.TRUST_PROXY || false;
+const TRUST_PROXY = process.env.TRUST_PROXY === "true";
 
-// Enhanced MongoDB connection with retry logic
+// MongoDB connection with retry
 const connectWithRetry = () => {
   mongoose
     .connect(MONGODB_URI, {
@@ -37,26 +36,23 @@ const connectWithRetry = () => {
       retryWrites: true,
       w: "majority",
     })
-    .then(() => console.log("✅ Connected to MongoDB"))
+    .then(() => console.log("✅ MongoDB connected"))
     .catch((err) => {
-      console.error("❌ MongoDB connection error:", err.message);
+      console.error("❌ MongoDB error:", err.message);
       if (NODE_ENV === "production") {
-        console.log("⏳ Retrying MongoDB connection in 5 seconds...");
+        console.log("⏳ Retrying in 5 seconds...");
         setTimeout(connectWithRetry, 5000);
       } else {
         process.exit(1);
       }
     });
 };
-
 connectWithRetry();
 
-// Trust proxy if behind load balancer/reverse proxy
-if (TRUST_PROXY) {
-  app.set("trust proxy", TRUST_PROXY === "true" ? true : TRUST_PROXY);
-}
+// Proxy trust
+if (TRUST_PROXY) app.set("trust proxy", true);
 
-// Security Middlewares
+// Middleware
 app.use(
   cors({
     origin: FRONTEND_URL,
@@ -66,7 +62,6 @@ app.use(
   })
 );
 
-// Enhanced security headers
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -80,66 +75,60 @@ app.use(
     },
     crossOriginResourcePolicy: { policy: "cross-origin" },
     hsts: {
-      maxAge: 63072000, // 2 years in seconds
+      maxAge: 63072000,
       includeSubDomains: true,
       preload: true,
     },
   })
 );
 
-// Compression middleware
 app.use(compression());
-
-// Body parsers with improved security
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-// Rate limiting with different settings for auth routes
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: NODE_ENV === "development" ? 1000 : 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: "Too many requests from this IP, please try again later",
-});
-
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Limit each IP to 10 requests per windowMs
-  message: "Too many login attempts, please try again later",
-});
-
-app.use("/api/", apiLimiter);
-app.use(["/login", "/register"], authLimiter);
-
-// Enhanced logging with request/response details
+// Logging
 app.use(
   morgan(NODE_ENV === "development" ? "dev" : "combined", {
     skip: (req) => req.path === "/health",
   })
 );
 
-// Static files with security headers
+// Rate limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: NODE_ENV === "development" ? 1000 : 100,
+  message: "Too many requests. Please try again later.",
+});
+app.use("/api/", generalLimiter);
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: "Too many login attempts. Please try again later.",
+});
+app.use(["/login", "/register"], authLimiter);
+
+// Serve static assets
 app.use(
   express.static(path.join(__dirname, "public"), {
     maxAge: NODE_ENV === "production" ? "1y" : "0",
-    setHeaders: (res, path) => {
+    setHeaders: (res, filePath) => {
       res.setHeader("X-Content-Type-Options", "nosniff");
-      if (path.endsWith(".html")) {
+      if (filePath.endsWith(".html")) {
         res.setHeader("Cache-Control", "no-store");
       }
     },
   })
 );
 
-// Health check endpoint with DB status
-app.get("/health", async (req, res) => {
-  const dbStatus =
+// Health check route
+app.get("/health", (req, res) => {
+  const dbState =
     mongoose.connection.readyState === 1 ? "connected" : "disconnected";
-  res.status(200).json({
+  res.json({
     status: "ok",
-    message: "Server is healthy",
-    database: dbStatus,
+    message: "Server healthy",
+    database: dbState,
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
@@ -154,68 +143,58 @@ app.use((req, res, next) => {
   next(createError(404, "Endpoint not found"));
 });
 
-// Enhanced error handler
+// Error Handler
 app.use((err, req, res, next) => {
-  // Log the error with additional context
-  console.error({
-    timestamp: new Date().toISOString(),
+  const errorInfo = {
+    time: new Date().toISOString(),
     method: req.method,
-    path: req.path,
+    url: req.originalUrl,
     status: err.status || 500,
     message: err.message,
     ...(NODE_ENV === "development" && { stack: err.stack }),
+  };
+
+  console.error("❌", errorInfo);
+
+  res.status(errorInfo.status).json({
+    status: "error",
+    message: errorInfo.message,
+    ...(NODE_ENV === "development" && { details: errorInfo.stack }),
   });
-
-  // Determine response format
-  res.status(err.status || 500);
-
-  if (req.accepts("json")) {
-    res.json({
-      status: "error",
-      message: err.message,
-      ...(NODE_ENV === "development" && { details: err.stack }),
-    });
-  } else {
-    res.type("txt").send(err.message);
-  }
 });
 
-// Server startup with validation
+// Start server
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT} in ${NODE_ENV} mode`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(
     `🔗 MongoDB: ${MONGODB_URI.split("@")[1]?.split("/")[0] || MONGODB_URI}`
   );
-  console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
+  console.log(`🌐 Frontend: ${FRONTEND_URL}`);
   console.log(`🛡️ Trust proxy: ${TRUST_PROXY}`);
 });
 
-// Enhanced graceful shutdown
+// Graceful shutdown
 const shutdown = async (signal) => {
-  console.log(`\n${signal} received. Shutting down gracefully...`);
-
+  console.log(`\n📴 ${signal} received. Shutting down...`);
   try {
-    await new Promise((resolve) => server.close(resolve));
-    console.log("HTTP server closed");
-
+    await new Promise((res) => server.close(res));
     await mongoose.connection.close(false);
-    console.log("MongoDB connection closed");
-
+    console.log("✅ Cleanup complete. Exiting.");
     process.exit(0);
   } catch (err) {
-    console.error("Error during shutdown:", err);
+    console.error("❌ Shutdown error:", err);
     process.exit(1);
   }
 };
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+["SIGTERM", "SIGINT"].forEach((signal) =>
+  process.on(signal, () => shutdown(signal))
+);
 
-// Handle unhandled rejections and exceptions
+// Handle unhandled errors
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  console.error("Unhandled Rejection:", reason);
 });
-
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
   shutdown("UNCAUGHT_EXCEPTION");

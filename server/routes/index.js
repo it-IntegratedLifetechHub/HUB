@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { body, check, validationResult } = require("express-validator");
 const { v4: uuidv4 } = require("uuid");
+const bcrypt = require("bcryptjs");
 
 const Admin = require("../Models/Admin");
 const jwt = require("jsonwebtoken");
@@ -13,9 +14,12 @@ const {
 const { register, login } = require("../Controllers/AuthController");
 const ensureAuthenticated = require("../Middlewares/Auth");
 
+const labAuth = require("../middlewares/LabAuth");
+
 const Patient = require("../Models/Patient");
 const Category = require("../Models/Category");
 const Order = require("../Models/Order");
+const Laboratory = require("../Models/Laboratory");
 
 router.post("/login", loginValidation, login);
 router.post("/register", registerValidation, register);
@@ -861,18 +865,6 @@ router.post(
       if (!isMatch) {
         return res.status(400).json({ msg: "Invalid credentials" });
       }
-
-      // Create JWT
-      const payload = { admin: { id: admin.id } };
-      jwt.sign(
-        payload,
-        process.env.JWT_SECRET,
-        { expiresIn: "5h" },
-        (err, token) => {
-          if (err) throw err;
-          res.json({ token });
-        }
-      );
     } catch (err) {
       console.error(err.message);
       res.status(500).send("Server error");
@@ -947,6 +939,121 @@ router.get(
   }
 );
 
+router.post(
+  "/api/lab/register",
+  [
+    body("name")
+      .notEmpty()
+      .withMessage("Laboratory name is required")
+      .isLength({ max: 100 })
+      .withMessage("Name cannot exceed 100 characters"),
 
+    body("email")
+      .notEmpty()
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Enter a valid email address")
+      .isLength({ max: 100 })
+      .withMessage("Email cannot exceed 100 characters"),
+
+    body("password")
+      .notEmpty()
+      .withMessage("Password is required")
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: errors.array(),
+      });
+    }
+
+    const { name, email, password } = req.body;
+
+    try {
+      // Check if lab already exists
+      const existingLab = await Laboratory.findOne({ email });
+      if (existingLab) {
+        return res
+          .status(409)
+          .json({ message: "Laboratory with this email already exists" });
+      }
+
+      // Create and save lab
+      const lab = new Laboratory({ name, email, password });
+      await lab.save();
+
+      return res.status(201).json({
+        message: "Laboratory registered successfully",
+        lab: {
+          id: lab._id,
+          name: lab.name,
+          email: lab.email,
+          createdAt: lab.createdAt,
+        },
+      });
+    } catch (error) {
+      console.error("Registration Error:", error);
+      return res
+        .status(500)
+        .json({ message: "Server error, please try again." });
+    }
+  }
+);
+router.post(
+  "/api/lab/login",
+  [
+    body("email")
+      .notEmpty()
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Please enter a valid email address"),
+    body("password").notEmpty().withMessage("Password is required"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+      const lab = await Laboratory.findOne({ email }).select("+password");
+      if (!lab || !(await lab.comparePassword(password))) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      const token = jwt.sign(
+        { laboratory: lab._id, role: "lab" },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        token: token,
+        lab: {
+          id: lab._id,
+          name: lab.name,
+          email: lab.email,
+        },
+      });
+    } catch (error) {
+      console.error("Login Error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error. Please try again.",
+      });
+    }
+  }
+);
 
 module.exports = router;

@@ -850,7 +850,7 @@ const Reports = () => {
         .report-modal {
           background: white;
           border-radius: 12px;
-          padding: 2rem;
+          padding: 2rem 2rem 7rem;
           width: 100%;
           max-width: 800px;
           box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);

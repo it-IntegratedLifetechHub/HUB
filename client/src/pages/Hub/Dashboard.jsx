@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import HubNav from "../../components/HubNav";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState({
     totalPatients: 0,
     growthPatients: 0, // You can fetch or compute this as needed
@@ -74,29 +77,12 @@ const Dashboard = () => {
     return date.toISOString().split("T")[0];
   };
 
-  // Map API status to display status
-  const getDisplayStatus = (status) => {
-    const statusMap = {
-      pending: "Pending",
-      confirmed: "Confirmed",
-      collected: "In Progress",
-      transit: "In Progress",
-      "in-lab": "In Progress",
-      processing: "In Progress",
-      "report-pending": "In Progress",
-      "report-ready": "Completed",
-      completed: "Completed",
-      cancelled: "Cancelled",
-    };
-    return statusMap[status.toLowerCase()] || status;
-  };
-
   if (loading) return <div className="loading">Loading recent orders...</div>;
   if (error) return <div className="error">{error}</div>;
 
   const handleLogout = () => {
-    // Clear tokens or session storage if needed
-    localStorage.removeItem("adminToken"); // or sessionStorage.clear()
+    localStorage.removeItem("adminToken");
+    navigate("/hub/login");
   };
   const phlebotomists = [
     {
@@ -473,6 +459,7 @@ const Dashboard = () => {
 
         .admin-dashboard {
           padding: 30px;
+          padding-bottom: 7rem;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
           color: var(--text-color);
           max-width: 1600px;

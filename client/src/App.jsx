@@ -23,6 +23,10 @@ import PatientLogin from "./pages/Patient/PatientLogin";
 import Phlebotomist from "./pages/Phlebotomist/Dashboard";
 import PhlebotomistTask from "./pages/Phlebotomist/Task";
 import PhlebotomistProfile from "./pages/Phlebotomist/Profile";
+
+import ProtectedRouteLab from "./pages/Lab/ProtectedRoute";
+import LabLogin from "./pages/Lab/LabLogin";
+import LabRegistration from "./pages/Lab/LabRegistration";
 import Lab from "./pages/Lab/Dashboard";
 import LabTest from "./pages/Lab/Test";
 import LabReport from "./pages/Lab/Reports";
@@ -228,14 +232,47 @@ const App = () => {
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/patient" replace />} />
 
-         {/* Other Role Routes */}
+        {/* Other Role Routes */}
         <Route path="/phlebotomist/dashboard" element={<Phlebotomist />} />
         <Route path="/phlebotomist/task" element={<PhlebotomistTask />} />
         <Route path="/phlebotomist/profile" element={<PhlebotomistProfile />} />
-        <Route path="/lab/dashboard" element={<Lab />} />
-        <Route path="/lab/test" element={<LabTest />} />
-        <Route path="/lab/report" element={<LabReport />} />
-        <Route path="/lab/profile" element={<LabProfile />} />
+
+        <Route path="/lab/login" element={<LabLogin />} />
+        <Route path="/lab/registration" element={<LabRegistration />} />
+
+        {/* Protected Lab Routes */}
+        <Route
+          path="/lab/dashboard"
+          element={
+            <ProtectedRouteLab>
+              <Lab />
+            </ProtectedRouteLab>
+          }
+        />
+        <Route
+          path="/lab/test"
+          element={
+            <ProtectedRouteLab>
+              <LabTest />
+            </ProtectedRouteLab>
+          }
+        />
+        <Route
+          path="/lab/report"
+          element={
+            <ProtectedRouteLab>
+              <LabReport />
+            </ProtectedRouteLab>
+          }
+        />
+        <Route
+          path="/lab/profile"
+          element={
+            <ProtectedRouteLab>
+              <LabProfile />
+            </ProtectedRouteLab>
+          }
+        />
 
         {/* 404 Route */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />
