@@ -4,11 +4,7 @@ import { useNavigate } from "react-router-dom";
 const HubLogin = () => {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -17,12 +13,8 @@ const HubLogin = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-
-    if (loginError) setLoginError("");
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setLoginError("");
   };
 
   const validateForm = () => {
@@ -45,40 +37,34 @@ const HubLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
 
-    if (validateForm()) {
-      setIsSubmitting(true);
-      setLoginError("");
+    setIsSubmitting(true);
+    setLoginError("");
 
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/hub/login`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          }
-        );
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hub/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (!res.ok) {
-          throw new Error(data.message || "Login failed");
-        }
-
-        if (rememberMe) {
-          localStorage.setItem("adminToken", data.token);
-        } else {
-          localStorage.setItem("adminToken", data.token);
-        }
-
-        navigate("/hub/dashboard");
-      } catch (err) {
-        setIsSubmitting(false);
-        setLoginError(err.message || "Server error. Please try again later.");
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
       }
+
+      if (!data.token) {
+        throw new Error("No token received from server");
+      }
+
+      localStorage.setItem("adminToken", data.token);
+      navigate("/hub/dashboard");
+    } catch (err) {
+      setLoginError(err.message || "Server error. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -169,23 +155,7 @@ const HubLogin = () => {
             }}
             disabled={isSubmitting}
           >
-            {isSubmitting ? (
-              <>
-                <svg style={styles.spinner} viewBox="0 0 50 50">
-                  <circle
-                    cx="25"
-                    cy="25"
-                    r="20"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="5"
-                  ></circle>
-                </svg>
-                Signing in...
-              </>
-            ) : (
-              "Sign In"
-            )}
+            Sign In
           </button>
 
           <div style={styles.footer}>
@@ -220,7 +190,6 @@ const styles = {
     width: "100%",
     maxWidth: "480px",
     padding: "40px",
-    transition: "all 0.3s ease",
   },
   header: {
     textAlign: "center",
@@ -235,7 +204,6 @@ const styles = {
   subtitle: {
     color: "#718096",
     fontSize: "16px",
-    margin: "0",
   },
   form: {
     display: "flex",
@@ -245,11 +213,11 @@ const styles = {
     marginBottom: "20px",
   },
   label: {
-    display: "block",
     marginBottom: "8px",
     color: "#4a5568",
     fontSize: "14px",
     fontWeight: "600",
+    display: "block",
   },
   input: {
     width: "100%",
@@ -257,9 +225,6 @@ const styles = {
     borderRadius: "8px",
     border: "1px solid #e2e8f0",
     fontSize: "16px",
-    color: "#2d3748",
-    transition: "all 0.2s ease",
-    boxSizing: "border-box",
     backgroundColor: "#f8fafc",
   },
   inputError: {
@@ -281,7 +246,6 @@ const styles = {
   rememberMe: {
     display: "flex",
     alignItems: "center",
-    cursor: "pointer",
   },
   checkbox: {
     marginRight: "8px",
@@ -299,9 +263,6 @@ const styles = {
     textDecoration: "none",
     fontWeight: "600",
   },
-  forgotPasswordHover: {
-    textDecoration: "underline",
-  },
   submitButton: {
     backgroundColor: "#4299e1",
     color: "white",
@@ -311,24 +272,11 @@ const styles = {
     fontSize: "16px",
     fontWeight: "600",
     cursor: "pointer",
-    transition: "all 0.2s ease",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: "8px",
-  },
-  submitButtonHover: {
-    backgroundColor: "#3182ce",
-    transform: "translateY(-1px)",
+    transition: "background-color 0.2s ease",
   },
   submitButtonDisabled: {
     backgroundColor: "#a0aec0",
     cursor: "not-allowed",
-  },
-  spinner: {
-    animation: "spin 1s linear infinite",
-    width: "20px",
-    height: "20px",
   },
   footer: {
     textAlign: "center",
@@ -344,9 +292,6 @@ const styles = {
     color: "#4299e1",
     textDecoration: "none",
     fontWeight: "600",
-  },
-  footerLinkHover: {
-    textDecoration: "underline",
   },
   errorAlert: {
     backgroundColor: "#fff5f5",
@@ -370,15 +315,5 @@ const styles = {
     fontWeight: "500",
   },
 };
-
-// Add keyframes for spinner animation
-const styleTag = document.createElement("style");
-styleTag.textContent = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;
-document.head.appendChild(styleTag);
 
 export default HubLogin;

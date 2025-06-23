@@ -79,8 +79,7 @@ const HubRegistration = () => {
         }
 
         const data = await res.json();
-        localStorage.setItem("adminToken", data.token);
-
+        
         setIsSubmitting(false);
         setRegistrationSuccess(true);
         setFormData({
@@ -90,7 +89,7 @@ const HubRegistration = () => {
         });
 
         setTimeout(() => {
-          navigate("/hub/dashboard"); // ✅ Updated navigation
+          navigate("/hub/login"); // ✅ Updated navigation
         }, 2000);
       } catch (err) {
         setIsSubmitting(false);
