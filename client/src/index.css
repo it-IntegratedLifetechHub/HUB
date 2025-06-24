@@ -1,0 +1,68 @@
+/*=============== GOOGLE FONTS ===============*/
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Outfit:wght@100..900&display=swap");
+
+/*=============== BASE STYLES ===============*/
+/* Color Variables */
+:root {
+    --primary-color: #7c3aed;
+    --primary-hover: #6b21a8;
+    --primary-light: #f3e8ff;
+    --secondary-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --text-dark: #1f2937;
+    --text-medium: #4b5563;
+    --text-light: #6b7280;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    font-family: "Outfit", sans-serif;
+    font-size: 16px;
+    background: linear-gradient(135deg, #fdfbfd 0%, #edebee 100%);
+    color: #333;
+    line-height: 1.7;
+}
+
+::placeholder {
+    font-family: "Outfit", sans-serif;
+    color: #aaa;
+}
+
+body::-webkit-scrollbar {
+    width: 6px;
+}
+
+body::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: #9900ff;
+    border-radius: 10px;
+}
+
+ul {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+
+    transition: color 0.3s;
+}
+
+
+html {
+    scroll-behavior: smooth;
+}
+
