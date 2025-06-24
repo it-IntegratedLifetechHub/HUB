@@ -893,9 +893,15 @@ const Book = () => {
                   }
                 />
                 <div className="payment-option-content">
+<<<<<<< HEAD
                   <FaIcons.FaMoneyBillWave className="payment-icon" />
                   <span>Pay at Visit</span>
                   <small>Cash, credit, or debit when doctor arrives</small>
+=======
+                  <FaIcons.FaBoxOpen className="payment-icon" />
+                  <span>Cash on Delivery (COD)</span>
+                  <small>Pay when the technician arrives</small>
+>>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
                 </div>
               </label>
 
