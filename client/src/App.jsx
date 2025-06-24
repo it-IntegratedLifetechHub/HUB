@@ -44,11 +44,8 @@ import ProtectedRoute from "./pages/Hub/ProtectedRoute";
 
 import HubRegistration from "./pages/Hub/HubRegistration";
 import HubLogin from "./pages/Hub/HubLogin";
-<<<<<<< HEAD
 import HomeDoctor from "./pages/Patient/HomeDoctor";
 import EmergencyRes from "./pages/Patient/EmergencyRes";
-=======
->>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
 
 const RefreshHandler = ({ setIsAuthenticated }) => {
   const location = useLocation();
@@ -172,7 +169,7 @@ const App = () => {
             />
           }
         />
-<<<<<<< HEAD
+
         <Route
           path="/doctor-visit"
           element={
@@ -191,8 +188,6 @@ const App = () => {
             />
           }
         />
-=======
->>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
 
         {/* ~~~~~~  HUB Routes  ~~~~~~ */}
         <Route path="/hub/registration" element={<HubRegistration />} />

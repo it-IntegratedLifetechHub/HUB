@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
+
 import { useNavigate } from "react-router-dom";
-=======
->>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
+
 import { FaFlask } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
 import * as BiIcons from "react-icons/bi";
@@ -15,7 +14,7 @@ import * as AiIcons from "react-icons/ai";
 import { MdLocationPin } from "react-icons/md";
 import { Link } from "react-router-dom";
 import BottomNavigation from "../../components/BottomNav";
-<<<<<<< HEAD
+
 import {
   FaCheckCircle,
   FaChevronRight,
@@ -24,8 +23,6 @@ import {
   FaStar,
   FaUserMd,
 } from "react-icons/fa";
-=======
->>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
 
 const iconLibraries = {
   Bi: BiIcons,
@@ -51,10 +48,8 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchMode, setSearchMode] = useState("categories");
-<<<<<<< HEAD
+
   const navigate = useNavigate();
-=======
->>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
 
   // Fetch categories from backend
   const fetchCategories = async (search = "", page = 1) => {
@@ -234,8 +229,6 @@ const Home = () => {
           </div>
         </div>
       </header>
-
-<<<<<<< HEAD
       <section className="healthcare-services">
         <div className="container">
           <div className="section-header">
@@ -325,8 +318,6 @@ const Home = () => {
         </div>
       </section>
 
-=======
->>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
       <main className="main-content">
         {loading ? (
           <div className="loading-spinner">Loading...</div>
@@ -831,7 +822,6 @@ const Home = () => {
             padding: 24px 12px;
           }
         }
-<<<<<<< HEAD
         /* Modern Healthcare Services CSS with new teal colors */
         .healthcare-services {
           padding: 2rem 0;
@@ -1138,8 +1128,6 @@ const Home = () => {
         .service-card:hover {
           animation: float 3s ease-in-out infinite;
         }
-=======
->>>>>>> 7491afe606ce87639068b2a6f6ea622367495ee0
       `}</style>
     </div>
   );
