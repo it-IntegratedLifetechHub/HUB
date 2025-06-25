@@ -1,333 +1,74 @@
 {
-  "tests": {
-    "Basic Health Checkups": {
-      "icon": "MdHealthAndSafety",
-      "link": "/service/Basic%20Health%20Checkups",
-      "tests": [
+  "appointment": {
+    "service": {
+      "name": "Premium In-Home Consultation",
+      "description": "A comprehensive 60-minute visit with a board-certified physician in the comfort of your home, including diagnosis, treatment plan, and prescriptions if needed.",
+      "duration": 60,
+      "duration_unit": "minutes",
+      "features": [
+        "60-minute dedicated visit",
+        "Complete physical examination",
+        "Personalized treatment plan"
+      ],
+      "includes": "Prescription if needed",
+      "expectations": [
+        "Comprehensive medical history review",
+        "Full physical examination",
+        "Vital signs check (blood pressure, temperature, etc.)",
+        "Diagnosis and treatment plan",
+        "Prescription if medically necessary",
+        "Follow-up recommendations"
+      ],
+      "preparation_guide": [
         {
-          "Complete Blood Count (CBC)": {
-            "icon": "BiDroplet",
-            "description": "The Complete Blood Count (CBC) test measures various components of your blood including red blood cells (RBCs), white blood cells (WBCs), hemoglobin, hematocrit, and platelets. It helps detect conditions like anemia, infections, and blood disorders, and is often used to monitor overall health or ongoing treatments.",
-            "preparation": "No special preparation or fasting is usually required. A simple blood sample is drawn from a vein.",
-            "turnaround_time": "Results are typically available within a few hours or by the next day.",
-            "why_to_take": "Recommended to detect anemia, infections, inflammation, and monitor health or treatment outcomes."
-          },
-          "Blood Sugar Test (Fasting & Random)": {
-            "icon": "FaTint",
-            "description": "A blood sugar test measures the level of glucose in your blood. Fasting blood sugar is checked after 8-12 hours of fasting, while random blood sugar can be checked at any time. This test helps diagnose diabetes, prediabetes, or monitor existing diabetes.",
-            "preparation": "For fasting blood sugar, avoid eating or drinking anything other than water for 8-12 hours. No preparation is needed for a random blood sugar test.",
-            "turnaround_time": "Results are typically available within a few hours.",
-            "why_to_take": "To screen for or monitor diabetes, hypoglycemia, or hyperglycemia."
-          },
-          "Lipid Profile": {
-            "icon": "GiOilDrum",
-            "description": "A lipid profile measures the levels of cholesterol and triglycerides in the blood. It includes total cholesterol, HDL (good cholesterol), LDL (bad cholesterol), and triglycerides, helping to assess the risk of heart disease.",
-            "preparation": "Usually requires fasting for 9-12 hours before the blood sample is taken.",
-            "turnaround_time": "Results are typically available within 24 hours.",
-            "why_to_take": "To evaluate heart disease risk and monitor cholesterol management."
-          },
-          "Liver Function Test (LFT)": {
-            "icon": "FaProcedures",
-            "description": "The Liver Function Test (LFT) measures various enzymes, proteins, and substances produced by the liver to assess its health and function. It helps detect liver damage, infections, or liver-related conditions.",
-            "preparation": "Fasting may be required for 8-12 hours before the test depending on the lab’s recommendation.",
-            "turnaround_time": "Results are typically available within 24 hours.",
-            "why_to_take": "To detect liver disease, jaundice, hepatitis, or monitor liver conditions and treatments."
-          },
-          "Kidney Function Test (KFT)": {
-            "icon": "GiKidneys",
-            "description": "The Kidney Function Test (KFT) measures levels of substances like creatinine, urea, and blood urea nitrogen (BUN) to evaluate how well the kidneys are functioning.",
-            "preparation": "Generally, no special preparation is needed, but hydration is recommended unless otherwise advised.",
-            "turnaround_time": "Results are typically available within 24 hours.",
-            "why_to_take": "To assess kidney health, diagnose kidney disease, or monitor chronic kidney conditions."
-          },
-          "Thyroid Profile (T3, T4, TSH)": {
-            "icon": "GiNecklace",
-            "description": "A Thyroid Profile test measures levels of T3, T4, and TSH hormones in the blood to evaluate thyroid gland function and detect thyroid disorders such as hypothyroidism or hyperthyroidism.",
-            "preparation": "No fasting required. The test can be taken at any time of the day unless otherwise specified.",
-            "turnaround_time": "Results are typically available within 24 hours.",
-            "why_to_take": "To diagnose or monitor thyroid disorders or imbalances."
-          },
-          "Vitamin D & Vitamin B12 Test": {
-            "icon": "BiCapsule",
-            "description": "This test measures the levels of Vitamin D and Vitamin B12 in the blood, both of which are essential for bone health, immunity, and nerve function.",
-            "preparation": "Usually no special preparation is required, but fasting may be suggested by the lab.",
-            "turnaround_time": "Results are typically available within 24 hours.",
-            "why_to_take": "To detect deficiencies that can lead to fatigue, bone pain, neurological symptoms, or weakened immunity."
-          }
+          "title": "Medical Information",
+          "description": "List of current medications, allergies, and medical history"
+        },
+        {
+          "title": "Comfortable Clothing",
+          "description": "Wear loose clothing that allows access to arms for blood pressure"
+        },
+        {
+          "title": "Fasting",
+          "description": "Fast for 8-12 hours if blood work might be needed"
+        },
+        {
+          "title": "Space Preparation",
+          "description": "Have a clean, quiet space available for the examination"
         }
-      ]
+      ],
+      "price": 1999,
+      "currency": "₹",
+      "availability": true
     },
-    "Infectious Disease Tests": {
-      "icon": "FaVirus",
-      "link": "/service/Infectious%20Disease%20Tests",
-      "tests": [
+    "time_slots": [
+      {
+        "value": "morning",
+        "label": "Morning (8am - 12pm)"
+      },
+      {
+        "value": "afternoon",
+        "label": "Afternoon (12pm - 4pm)"
+      },
+      {
+        "value": "evening",
+        "label": "Evening (4pm - 8pm)"
+      }
+    ],
+    "payment": {
+      "method": "cod",
+      "options": [
         {
-          "COVID-19 RT-PCR or Rapid Test": {
-            "icon": "FaVirus",
-            "description": "A COVID-19 RT-PCR test detects the presence of coronavirus genetic material, while the Rapid Test checks for antigens or antibodies. RT-PCR is the gold standard for accurate detection of current infection.",
-            "preparation": "No specific preparation is required, but avoid eating or drinking 30 minutes before a swab test.",
-            "turnaround_time": "RT-PCR results within 24-48 hours; Rapid test results within 30 minutes.",
-            "why_to_take": "To detect active COVID-19 infection, especially if symptomatic or exposed."
-          },
-          "Malaria Test": {
-            "icon": "GiAmberMosquito",
-            "description": "A Malaria test detects malaria parasites in the blood. It’s done either through microscopy or rapid diagnostic tests to confirm malaria infection.",
-            "preparation": "No special preparation needed. The blood sample is typically taken from a finger prick or vein.",
-            "turnaround_time": "Results available within a few hours.",
-            "why_to_take": "To confirm suspected malaria symptoms such as fever, chills, and body aches."
-          },
-          "Dengue Test (NS1, IgG, IgM)": {
-            "icon": "GiAmberMosquito",
-            "description": "The Dengue test detects dengue virus proteins (NS1) and antibodies (IgG, IgM) in the blood. It helps identify current or past dengue infections.",
-            "preparation": "No special preparation required. It’s a simple blood test.",
-            "turnaround_time": "Results are generally available within 24 hours.",
-            "why_to_take": "To diagnose dengue fever in patients showing symptoms such as high fever, rashes, muscle and joint pain."
-          },
-          "Typhoid Test (Widal, Typhidot)": {
-            "icon": "RiVirusLine",
-            "description": "Typhoid tests such as Widal and Typhidot detect antibodies against Salmonella typhi bacteria, which cause typhoid fever.",
-            "preparation": "Fasting may be recommended for 8-10 hours depending on lab requirements.",
-            "turnaround_time": "Results are typically available within 24 hours.",
-            "why_to_take": "To diagnose typhoid fever if symptoms like prolonged fever, weakness, and abdominal discomfort are present."
-          },
-          "HIV Test": {
-            "icon": "RiVirusLine",
-            "description": "An HIV test detects antibodies or antigens to determine if a person is infected with the human immunodeficiency virus (HIV).",
-            "preparation": "No special preparation required; just a blood or saliva sample.",
-            "turnaround_time": "Rapid test results within 30 minutes; standard test results in 1-2 days.",
-            "why_to_take": "For HIV screening, confirmatory testing, or regular health check-ups."
-          },
-          "Hepatitis B & C Screening": {
-            "icon": "FaVial",
-            "description": "Hepatitis B & C screening tests detect the presence of hepatitis B surface antigens and hepatitis C antibodies in the blood, indicating infection or exposure.",
-            "preparation": "No special preparation is required. Blood sample collection is standard.",
-            "turnaround_time": "Results are typically available within 24-48 hours.",
-            "why_to_take": "To detect infection early and prevent liver damage or chronic hepatitis."
-          }
-        }
-      ]
-    },
-    "Chronic Disease Management": {
-      "icon": "MdOutlineMonitorHeart",
-      "link": "/service/Chronic%20Disease%20Management",
-      "tests": [
+          "type": "cod",
+          "label": "Pay at Visit",
+          "description": "Cash, credit, or debit when doctor arrives",
+          "icon": "FaMoneyBillWave"
+        },
         {
-          "HbA1c (3-month average blood sugar)": {
-            "icon": "BiDroplet",
-            "description": "The HbA1c test measures the average blood sugar levels over the past three months. It’s an important test for diagnosing and monitoring diabetes.",
-            "preparation": "No fasting or special preparation is required.",
-            "turnaround_time": "Results are usually available within 24 hours.",
-            "why_to_take": "To monitor long-term glucose control and diagnose diabetes or prediabetes."
-          },
-          "Creatinine Test": {
-            "icon": "GiKidneys",
-            "description": "A Creatinine test measures the level of creatinine in the blood, indicating how well the kidneys are functioning.",
-            "preparation": "No special preparation needed, though fasting may be advised in some cases.",
-            "turnaround_time": "Results are generally available within 24 hours.",
-            "why_to_take": "To assess kidney health and monitor kidney diseases or conditions."
-          },
-          "Uric Acid Test": {
-            "icon": "GiChemicalDrop",
-            "description": "The Uric Acid test measures uric acid levels in the blood, helping diagnose gout or monitor patients undergoing chemotherapy.",
-            "preparation": "Fasting for 4-6 hours may be recommended.",
-            "turnaround_time": "Results typically within 24 hours.",
-            "why_to_take": "To diagnose gout, kidney stones, or monitor uric acid levels during certain treatments."
-          },
-          "Cholesterol Levels": {
-            "icon": "GiOilDrum",
-            "description": "This test measures total cholesterol, LDL, HDL, and triglycerides to assess heart health and risk of cardiovascular disease.",
-            "preparation": "Fasting for 9-12 hours is usually required.",
-            "turnaround_time": "Results available within 24 hours.",
-            "why_to_take": "To monitor heart health and assess risk of heart disease and stroke."
-          },
-          "Electrolyte Panel (Sodium, Potassium, Chloride)": {
-            "icon": "BiPlug",
-            "description": "An Electrolyte Panel measures levels of sodium, potassium, and chloride in the blood to evaluate fluid balance, kidney function, and heart health.",
-            "preparation": "No special preparation required; fasting may be advised if part of a larger panel.",
-            "turnaround_time": "Results are generally available within a few hours to 24 hours.",
-            "why_to_take": "To detect electrolyte imbalances that can affect heart rhythm, muscles, and nerve function."
-          }
-        }
-      ]
-    },
-    "Women’s Health Tests": {
-      "icon": "BiFemaleSign",
-      "link": "/service/Women%E2%80%99s%20Health%20Tests",
-      "tests": [
-        {
-          "Pregnancy Test (Beta hCG)": {
-            "icon": "BiFemaleSign",
-            "description": "The Beta hCG test measures the level of human chorionic gonadotropin hormone in blood or urine to confirm pregnancy.",
-            "preparation": "No special preparation is required.",
-            "turnaround_time": "Results are typically available within a few hours.",
-            "why_to_take": "To confirm pregnancy and monitor early stages of pregnancy or detect certain pregnancy-related conditions."
-          },
-          "PCOS Panel (Hormonal profile)": {
-            "icon": "BiFemaleSign",
-            "description": "The PCOS panel measures various hormones such as LH, FSH, testosterone, and insulin levels to diagnose polycystic ovary syndrome (PCOS).",
-            "preparation": "Fasting may be required, and timing in the menstrual cycle may be recommended by a doctor.",
-            "turnaround_time": "Results typically within 24–48 hours.",
-            "why_to_take": "To assess hormonal imbalances and diagnose PCOS or other related conditions."
-          },
-          "PAP Smear (if offering nurse visits)": {
-            "icon": "MdOutlineMedicalServices",
-            "description": "A PAP Smear is a screening test for cervical cancer that detects abnormal cells in the cervix.",
-            "preparation": "Avoid intercourse, douching, or vaginal medications 24 hours before the test. Preferably scheduled mid-cycle.",
-            "turnaround_time": "Results are generally available within 3–5 days.",
-            "why_to_take": "To screen for cervical cancer or detect precancerous conditions in women."
-          },
-          "CA-125 (Ovarian cancer marker)": {
-            "icon": "MdOutlineScience",
-            "description": "The CA-125 test measures the level of cancer antigen 125 in the blood, which can be elevated in ovarian cancer and other conditions.",
-            "preparation": "No special preparation is needed, but inform your doctor about any medications or conditions.",
-            "turnaround_time": "Results are usually available within 24–48 hours.",
-            "why_to_take": "To help monitor ovarian cancer or investigate pelvic pain and abnormal bleeding."
-          }
-        }
-      ]
-    },
-    "Men’s Health Tests": {
-      "icon": "BiMaleSign",
-      "link": "/service/Men%E2%80%99s%20Health%20Tests",
-      "tests": [
-        {
-          "PSA Test (Prostate-Specific Antigen)": {
-            "icon": "BiMaleSign",
-            "description": "The PSA test measures the level of prostate-specific antigen in the blood, which may indicate prostate health issues or prostate cancer.",
-            "preparation": "Avoid ejaculation, vigorous exercise, and certain medications for 24–48 hours before the test. Follow your doctor's instructions.",
-            "turnaround_time": "Results are typically available within 24–48 hours.",
-            "why_to_take": "To screen for prostate cancer, monitor existing prostate conditions, or investigate urinary problems in men."
-          },
-          "Testosterone levels": {
-            "icon": "BiMaleSign",
-            "description": "The testosterone test measures the amount of testosterone hormone in the blood to assess male reproductive and general health.",
-            "preparation": "Usually recommended to be done in the morning. Fasting may not be necessary unless specified by a doctor.",
-            "turnaround_time": "Results are generally available within 24–48 hours.",
-            "why_to_take": "To evaluate symptoms like low libido, fatigue, erectile dysfunction, or infertility in men, or hormonal imbalances in both men and women."
-          }
-        }
-      ]
-    },
-    "Allergy & Immunity Tests": {
-      "icon": "RiVirusLine",
-      "link": "/service/Allergy%20%26%20Immunity%20Tests",
-      "tests": [
-        {
-          "Allergy Profile (Food & Environmental)": {
-            "icon": "GiMedicines",
-            "description": "An allergy profile test detects allergic reactions to various food and environmental allergens by measuring antibody response.",
-            "preparation": "No special preparation is needed. Inform your doctor about any medications you are taking.",
-            "turnaround_time": "Results are usually available within 3–5 days.",
-            "why_to_take": "To identify specific allergens that trigger reactions like sneezing, skin rashes, asthma, or digestive issues."
-          },
-          "Immunoglobulin Tests (IgE)": {
-            "icon": "PiTestTubeFill",
-            "description": "The IgE test measures the level of Immunoglobulin E antibodies, which are involved in allergic reactions and certain immune responses.",
-            "preparation": "No fasting or special preparation required unless advised by your doctor.",
-            "turnaround_time": "Results are typically available within 2–4 days.",
-            "why_to_take": "To diagnose allergies, monitor allergic conditions, or detect immune system disorders."
-          }
-        }
-      ]
-    },
-    "Cardiac Health": {
-      "icon": "AiOutlineHeart",
-      "link": "/service/Cardiac%20Health",
-      "tests": [
-        {
-          "Cardiac Enzyme Test": {
-            "icon": "AiOutlineHeart",
-            "description": "A cardiac enzyme test measures the levels of specific enzymes released into the blood when the heart muscle is damaged, such as during a heart attack.",
-            "preparation": "Usually no fasting is required. Follow any specific instructions from your doctor.",
-            "turnaround_time": "Results are typically available within a few hours to 1 day.",
-            "why_to_take": "To diagnose or rule out heart attacks or other heart-related issues and to assess heart muscle damage."
-          },
-          "Troponin-I": {
-            "icon": "AiOutlineHeart",
-            "description": "Troponin-I is a protein found in heart muscle that is released into the bloodstream after heart damage. It is one of the most specific markers for heart attacks.",
-            "preparation": "No special preparation needed.",
-            "turnaround_time": "Results are usually available within 1–3 hours.",
-            "why_to_take": "To detect heart muscle injury, diagnose heart attacks, and monitor heart-related conditions."
-          },
-          "BNP (for heart failure screening)": {
-            "icon": "AiOutlineHeart",
-            "description": "The BNP (B-type Natriuretic Peptide) test measures the level of BNP hormone in the blood, which is elevated in cases of heart failure.",
-            "preparation": "No special preparation needed.",
-            "turnaround_time": "Results are generally available within 1–2 days.",
-            "why_to_take": "To help diagnose heart failure, monitor treatment response, or evaluate shortness of breath or fluid retention."
-          }
-        }
-      ]
-    },
-    "Other Specialized Tests": {
-      "icon": "GiTestTubes",
-      "link": "/service/Other%20Specialized%20Tests",
-      "tests": [
-        {
-          "Stool Routine & Culture": {
-            "icon": "GiChemicalDrop",
-            "description": "A stool routine and culture test identifies bacteria, parasites, or other issues in the digestive system by analyzing a stool sample.",
-            "preparation": "No fasting required. Follow any collection instructions provided by the lab.",
-            "turnaround_time": "Results are generally available within 2–3 days.",
-            "why_to_take": "To diagnose digestive infections, inflammation, or other gastrointestinal issues."
-          },
-          "Urine Routine & Culture": {
-            "icon": "BiDroplet",
-            "description": "This test examines urine for signs of infection, kidney disease, or metabolic conditions, and cultures bacteria if present.",
-            "preparation": "Collect a mid-stream urine sample following cleanliness instructions.",
-            "turnaround_time": "Routine results in a day; culture results in 2–3 days.",
-            "why_to_take": "To diagnose urinary tract infections and evaluate kidney health."
-          },
-          "Sputum Test": {
-            "icon": "BiMask",
-            "description": "A sputum test analyzes mucus coughed from the lungs to detect respiratory infections like tuberculosis or pneumonia.",
-            "preparation": "Best done early morning; avoid eating beforehand and follow collection instructions.",
-            "turnaround_time": "Results usually available in 2–3 days; longer if TB culture is required.",
-            "why_to_take": "To diagnose respiratory infections and monitor chronic lung diseases."
-          },
-          "Coagulation Profile (PT, INR)": {
-            "icon": "BiDroplet",
-            "description": "The PT and INR tests measure how quickly blood clots, used to check for bleeding disorders or monitor blood thinner therapy.",
-            "preparation": "No special preparation required unless advised by your doctor.",
-            "turnaround_time": "Results are typically available on the same day.",
-            "why_to_take": "To check blood clotting function and monitor anticoagulant medications."
-          },
-          "Blood Grouping": {
-            "icon": "BiDroplet",
-            "description": "A blood grouping test determines your blood type (A, B, AB, or O) and Rh factor (positive or negative).",
-            "preparation": "No preparation needed.",
-            "turnaround_time": "Results available within a few hours.",
-            "why_to_take": "Essential before surgeries, transfusions, or pregnancy planning."
-          }
-        }
-      ]
-    },
-    "Add-On Services": {
-      "icon": "MdAddCircleOutline",
-      "link": "/service/Add-On%20Services",
-      "tests": [
-        {
-          "ECG at home": {
-            "icon": "MdFavorite",
-            "description": "An Electrocardiogram (ECG) performed at home records the electrical activity of the heart to detect arrhythmias, heart blockages, or other cardiac issues.",
-            "preparation": "Wear comfortable clothing; avoid heavy exercise and caffeine before the test if advised.",
-            "turnaround_time": "Test performed and report typically generated within the same day.",
-            "why_to_take": "To monitor heart health and detect potential heart problems without visiting a clinic."
-          },
-          "Blood Pressure and Oxygen monitoring": {
-            "icon": "FiActivity",
-            "description": "At-home blood pressure and oxygen (SpO2) monitoring help track vital parameters for heart health and respiratory function.",
-            "preparation": "Sit relaxed for a few minutes before measurement; avoid caffeine or heavy meals beforehand.",
-            "turnaround_time": "Instant readings with daily or periodic reporting.",
-            "why_to_take": "For individuals with hypertension, heart disease, respiratory issues, or for general health monitoring."
-          },
-          "Portable ultrasound (collaborate with technicians)": {
-            "icon": "MdCameraAlt",
-            "description": "A portable ultrasound performed at home allows real-time imaging of internal organs, helping in diagnosis without hospital visits.",
-            "preparation": "Preparation depends on the type of ultrasound; fasting or full bladder may be required for certain scans.",
-            "turnaround_time": "Immediate scan with report usually within 24 hours.",
-            "why_to_take": "To diagnose abdominal issues, pregnancy monitoring, or soft tissue evaluations from home."
-          }
+          "type": "online",
+          "label": "Online Payment",
+          "description": "Secure payment now with card/UPI",
+          "icon": "FaCreditCard"
         }
       ]
     }

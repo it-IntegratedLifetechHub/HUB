@@ -35,8 +35,10 @@ const iconLibraries = {
 };
 
 const Home = () => {
+  const [location, setLocation] = useState("Your Location");
+  const [coordinates, setCoordinates] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("Fetching location...");
+  const [googleMapsLink, setGoogleMapsLink] = useState("");
   const [categories, setCategories] = useState([]);
   const [tests, setTests] = useState([]);
   const [pagination, setPagination] = useState({
@@ -165,6 +167,13 @@ const Home = () => {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
+            setCoordinates({ latitude, longitude });
+
+            // Generate Google Maps link
+            const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            setGoogleMapsLink(mapsLink);
+            console.log("Google Maps Navigation Link:", mapsLink);
+
             try {
               const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
@@ -178,20 +187,36 @@ const Home = () => {
                   "Your Location"
               );
             } catch (err) {
+              console.error("Error fetching location details:", err);
               setLocation("Your Location");
             }
           },
-          () => {
+          (error) => {
+            console.error("Geolocation error:", error);
             setLocation("Your Location");
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0,
           }
         );
       } else {
+        console.log("Geolocation is not supported by this browser.");
         setLocation("Your Location");
       }
     };
 
     fetchLocation();
   }, []);
+
+  const handleLocationClick = () => {
+    if (coordinates) {
+      window.open(googleMapsLink, "_blank");
+    } else {
+      alert("Location data not available yet. Please wait...");
+    }
+  };
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.pages) {
@@ -211,7 +236,11 @@ const Home = () => {
   return (
     <div className="home-container">
       <header className="app-header">
-        <div className="location-container">
+        <div
+          className="location-container"
+          onClick={handleLocationClick}
+          style={{ cursor: "pointer" }}
+        >
           <MdLocationPin className="location-icon pulse" />
           <h1 className="location-text">{location}</h1>
         </div>

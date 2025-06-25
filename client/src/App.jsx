@@ -47,6 +47,12 @@ import HubLogin from "./pages/Hub/HubLogin";
 import HomeDoctor from "./pages/Patient/HomeDoctor";
 import EmergencyRes from "./pages/Patient/EmergencyRes";
 
+import DoctorDashboard from "./pages/Doctor/Dashboard";
+import DoctorAppointments from "./pages/Doctor/Appointments";
+import DoctorPatients from "./pages/Doctor/Patients";
+import DoctorPrescriptions from "./pages/Doctor/Prescriptions";
+import DoctorProfile from "./pages/Doctor/Profile";
+
 const RefreshHandler = ({ setIsAuthenticated }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -294,6 +300,12 @@ const App = () => {
             </ProtectedRouteLab>
           }
         />
+
+        <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+        <Route path="/doctor/appointments" element={<DoctorAppointments />} />
+        <Route path="/doctor/patients" element={<DoctorPatients />} />
+        <Route path="/doctor/prescriptions" element={<DoctorPrescriptions />} />
+        <Route path="/doctor/profile" element={<DoctorProfile />} />
 
         {/* 404 Route */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />
