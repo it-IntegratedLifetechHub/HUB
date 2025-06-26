@@ -163,48 +163,51 @@ const Home = () => {
 
   useEffect(() => {
     const fetchLocation = async () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            setCoordinates({ latitude, longitude });
-
-            // Generate Google Maps link
-            const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-            setGoogleMapsLink(mapsLink);
-            console.log("Google Maps Navigation Link:", mapsLink);
-
-            try {
-              const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
-              );
-              const data = await response.json();
-              setLocation(
-                data.address.suburb ||
-                  data.address.city ||
-                  data.address.town ||
-                  data.display_name ||
-                  "Your Location"
-              );
-            } catch (err) {
-              console.error("Error fetching location details:", err);
-              setLocation("Your Location");
-            }
-          },
-          (error) => {
-            console.error("Geolocation error:", error);
-            setLocation("Your Location");
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0,
-          }
-        );
-      } else {
+      if (!navigator.geolocation) {
         console.log("Geolocation is not supported by this browser.");
         setLocation("Your Location");
+        return;
       }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+          setCoordinates({ latitude, longitude });
+
+          const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+          setGoogleMapsLink(mapsLink);
+          console.log("Google Maps Navigation Link:", mapsLink);
+          console.log("Location Accuracy:", accuracy, "meters");
+
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+            );
+            const data = await response.json();
+            const preciseLocation =
+              data.address.neighbourhood ||
+              data.address.suburb ||
+              data.address.village ||
+              data.address.town ||
+              data.address.city ||
+              data.display_name ||
+              "Your Location";
+            setLocation(preciseLocation);
+          } catch (err) {
+            console.error("Error fetching location details:", err);
+            setLocation("Your Location");
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLocation("Your Location");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000, // Slightly longer timeout for better precision
+          maximumAge: 0,
+        }
+      );
     };
 
     fetchLocation();

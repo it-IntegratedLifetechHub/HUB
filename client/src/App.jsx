@@ -52,6 +52,8 @@ import DoctorAppointments from "./pages/Doctor/Appointments";
 import DoctorPatients from "./pages/Doctor/Patients";
 import DoctorPrescriptions from "./pages/Doctor/Prescriptions";
 import DoctorProfile from "./pages/Doctor/Profile";
+import DoctorLogin from "./pages/Doctor/Login";
+import DoctorRegistration from "./pages/Doctor/Registration";
 
 const RefreshHandler = ({ setIsAuthenticated }) => {
   const location = useLocation();
@@ -301,6 +303,8 @@ const App = () => {
           }
         />
 
+        <Route path="/doctor/login" element={<DoctorLogin />} />
+        <Route path="/doctor/registration" element={<DoctorRegistration />} />
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
         <Route path="/doctor/appointments" element={<DoctorAppointments />} />
         <Route path="/doctor/patients" element={<DoctorPatients />} />
