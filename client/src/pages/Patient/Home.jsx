@@ -160,53 +160,59 @@ const Home = () => {
       <FaFlask size={size} />
     );
   };
-
   useEffect(() => {
     const fetchLocation = async () => {
       if (!navigator.geolocation) {
-        console.log("Geolocation is not supported by this browser.");
-        setLocation("Your Location");
+        console.warn("❌ Geolocation not supported by this browser.");
+        setLocation("Location not available");
         return;
       }
+
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      };
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude, accuracy } = position.coords;
-          setCoordinates({ latitude, longitude });
+          const coords = { latitude, longitude };
+          setCoordinates(coords);
 
           const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
           setGoogleMapsLink(mapsLink);
-          console.log("Google Maps Navigation Link:", mapsLink);
-          console.log("Location Accuracy:", accuracy, "meters");
+
+          console.log("📍 Coordinates:", coords);
+          console.log("🗺️ Google Maps Link:", mapsLink);
+          console.log("📏 Accuracy:", Math.round(accuracy), "meters");
 
           try {
-            const response = await fetch(
+            const res = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
             );
-            const data = await response.json();
-            const preciseLocation =
+            const data = await res.json();
+
+            const resolvedLocation =
               data.address.neighbourhood ||
               data.address.suburb ||
               data.address.village ||
               data.address.town ||
               data.address.city ||
               data.display_name ||
-              "Your Location";
-            setLocation(preciseLocation);
+              "Unnamed Location";
+
+            setLocation(resolvedLocation);
           } catch (err) {
-            console.error("Error fetching location details:", err);
-            setLocation("Your Location");
+            console.error("❌ Reverse geocoding failed:", err.message);
+            setLocation("Approximate Location");
           }
         },
         (error) => {
-          console.error("Geolocation error:", error);
-          setLocation("Your Location");
+          console.error("❌ Geolocation error:", error.message);
+          setLocation("Location access denied or unavailable");
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000, // Slightly longer timeout for better precision
-          maximumAge: 0,
-        }
+        options
       );
     };
 
