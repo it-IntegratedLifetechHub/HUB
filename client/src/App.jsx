@@ -46,6 +46,7 @@ import HubRegistration from "./pages/Hub/HubRegistration";
 import HubLogin from "./pages/Hub/HubLogin";
 import HomeDoctor from "./pages/Patient/HomeDoctor";
 import EmergencyRes from "./pages/Patient/EmergencyRes";
+import Hospitals from "./pages/Patient/Hospitals";
 
 import DoctorDashboard from "./pages/Doctor/Dashboard";
 import DoctorAppointments from "./pages/Doctor/Appointments";
@@ -171,6 +172,15 @@ const App = () => {
           element={
             <PatientRoute
               element={<Report />}
+              isAuthenticated={isAuthenticated}
+            />
+          }
+        />
+        <Route
+          path="/hospitals"
+          element={
+            <PatientRoute
+              element={<Hospitals />}
               isAuthenticated={isAuthenticated}
             />
           }

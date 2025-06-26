@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { FaHome, FaUser, FaBell, FaPlus, FaHistory } from "react-icons/fa";
-import { MdOutlineInventory, MdLocalHospital } from "react-icons/md";
-import { TbReportMedical, TbReport } from "react-icons/tb";
+import { FaHome, FaUser, FaHistory } from "react-icons/fa";
+import { MdLocalHospital } from "react-icons/md";
+import { TbReportMedical } from "react-icons/tb";
 import { useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -37,6 +37,12 @@ const BottomNavigation = () => {
       icon: <TbReportMedical size={22} />,
       label: "Reports",
       color: "#28a745",
+    },
+    {
+      path: "/hospitals",
+      icon: <MdLocalHospital size={22} />,
+      label: "Hospitals",
+      color: "#d63384",
     },
     {
       path: "/profile",
@@ -122,7 +128,6 @@ const BottomNavigation = () => {
           );
         })}
       </motion.nav>
-
       <style jsx>{`
         .nav-container {
           position: fixed;
@@ -265,3 +270,5 @@ const BottomNavigation = () => {
 };
 
 export default BottomNavigation;
+
+
