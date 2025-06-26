@@ -55,6 +55,13 @@ import DoctorProfile from "./pages/Doctor/Profile";
 import DoctorLogin from "./pages/Doctor/Login";
 import DoctorRegistration from "./pages/Doctor/Registration";
 
+import MobileLogin from "./pages/MobileHospital/Login";
+import MobileRegistration from "./pages/MobileHospital/Registration";
+import MobileDashboard from "./pages/MobileHospital/Dashboard";
+import MobilePatients from "./pages/MobileHospital/Patients";
+import MobileHospitals from "./pages/MobileHospital/Hospitals";
+import MobileProfile from "./pages/MobileHospital/Profile";
+
 const RefreshHandler = ({ setIsAuthenticated }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -310,6 +317,22 @@ const App = () => {
         <Route path="/doctor/patients" element={<DoctorPatients />} />
         <Route path="/doctor/prescriptions" element={<DoctorPrescriptions />} />
         <Route path="/doctor/profile" element={<DoctorProfile />} />
+
+        <Route path="/mobile-hospital/login" element={<MobileLogin />} />
+        <Route
+          path="/mobile-hospital/registration"
+          element={<MobileRegistration />}
+        />
+        <Route
+          path="/mobile-hospital/dashboard"
+          element={<MobileDashboard />}
+        />
+        <Route path="/mobile-hospital/patients" element={<MobilePatients />} />
+        <Route
+          path="/mobile-hospital/hospitals"
+          element={<MobileHospitals />}
+        />
+        <Route path="/mobile-hospital/profile" element={<MobileProfile />} />
 
         {/* 404 Route */}
         <Route path="*" element={<div>404 - Page Not Found</div>} />
